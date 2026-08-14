@@ -1,16 +1,42 @@
-﻿using WoowzLib.Window.GLFW.WLO;
+﻿using WLO;
+using WLO.Render.Software;
+using WoowzLib.Core.WLO;
+using WoowzLib.Core.WLO.Math;
 
-// ----------------------------------------------------------------------
+WLO.Window.GLFW Window = new WLO.Window.GLFW(new Vector2I(800, 600), "TEST WINDOW");
 
-Window_GLFW Window = new Window_GLFW();
+FrameBuffer Buffer = new FrameBuffer(new Vector2I(800, 600));
+WLO.Render.Software.Simple Render = new Simple();
 
-Window.Create(800, 600, "TEST WINDOW");
+int cubeX = 0;
+int cubeY = 200;
+int speed = 1;
 
 while(!Window.IsClosed){
     Window.PollEvents();
     
-    Window.SwapBuffers();
+    Array.Fill(Buffer.Pixels, new Color4B(0, 0, 0));
+
+    // --- ШАГ 2: РИСОВАНИЕ СЕТКИ (ТЕСТ ЛИНИЙ) ---
+    for (int i = 0; i < 800; i += 40)
+    {
+        Render.DrawLine(Buffer, new Vector2I(i, 0), new Vector2I(i, 600), new Color4B(50, 50, 50));
+    }
+    for (int i = 0; i < 600; i += 40)
+    {
+        Render.DrawLine(Buffer, new Vector2I(0, i), new Vector2I(800, i), new Color4B(50, 50, 50));
+    }
+
+    // --- ШАГ 3: ЛОГИКА И РИСОВАНИЕ КВАДРАТА ---
+    Render.DrawRect(Buffer, new Rect2I(cubeX, cubeY, 100, 100), new Color4B(255, 0, 0));
+    
+    // Двигаем квадрат
+    cubeX += speed;
+    if (cubeX > 800 - 100 || cubeX < 0) speed = -speed; // Отскок от стенок
+    
+    Window.Present(Buffer);
 }
 
 Window.Close();
-Window_GLFW.TerminateGLFW();
+
+WLO.Window.GLFW.TerminateGLFW();
