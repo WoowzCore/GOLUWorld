@@ -1,4 +1,6 @@
 ﻿using System.Runtime.InteropServices;
+using System.Text;
+using Silk.NET.GLFW;
 using Silk.NET.OpenGL;
 using WLO;
 using WLO.GPU;
@@ -6,7 +8,7 @@ using WLO.Math;
 using WLO.Render;
 using WLO.Render.Hardware;
 using WLO.Window;
-using Shader = WLI.GPU.Shader;
+using WLOLanguageContext;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct GOLUVertex{
@@ -20,19 +22,19 @@ public struct GOLUVertex{
 }
 
 public static class Program{
-    public static WLO.Window.GLFW Window = null!;
-
-    public static double Accumulator = 0;
-    public static long   LastTicks;
-
-    public static DeltaTimeInfo DTI;
-
-    public static OpenGL      Render = null!;
-    public static GLView      View   = null!;
-    public static GLTexture2D Screen = null!;
-    
     public static int Main(string[] Args){
         try{
+            WLO.Window.GLFW Window = null!;
+
+            double Accumulator = 0;
+            long   LastTicks   = 0;
+
+            DeltaTimeInfo DTI = default;
+
+            OpenGL      Render = null!;
+            GLView      View   = null!;
+            GLTexture2D Screen = null!;
+            
             Window = new GLFW(new Vector2I(800, 600), "GOLUWorld : C# Instance");
             Window.TODO_UseDarkMode();
 
@@ -50,7 +52,7 @@ public static class Program{
 
             GLMesh ScreenMesh = Render.CreateMesh(Layout, Quad.Vertices.Select(V => new GOLUVertex(V.Position, V.UV)).ToArray(), Quad.Indices.ToArray());
             GLProgram ScreenProgram = Render.CreateProgram(
-                Render.CreateShader(Shader.Type.Vertex, 
+                Render.CreateShader(WLI.GPU.Shader.Type.Vertex, 
 @"#version 430 core
 layout (location = 0) in vec3 Position;
 layout (location = 1) in vec2 UV;
@@ -64,7 +66,7 @@ void main(){
     OutUV = UV;
 }"
 ),
-                Render.CreateShader(Shader.Type.Fragment, 
+                Render.CreateShader(WLI.GPU.Shader.Type.Fragment, 
 @"#version 430 core
 out vec4 FragColor;
 
@@ -83,7 +85,70 @@ void main(){
             
             Screen = Render.CreateTexture2D(new Vector2I(384, 216));
             Screen.SetFilter(TextureMinFilter.Nearest);
-            Screen.Fill(new Color4B(0, 255, 0));
+            
+            void TEST_FillNoise() {
+                int totalPixels = Screen.Size.W * Screen.Size.H;
+                Color4B[] noise = new Color4B[totalPixels];
+    
+                for (int i = 0; i < totalPixels; i++) {
+                    noise[i] = new Color4B(
+                        (byte)Random.Shared.Next(0, 256),
+                        (byte)Random.Shared.Next(0, 256),
+                        (byte)Random.Shared.Next(0, 256),
+                        255
+                    );
+                }
+    
+                Screen.Update(noise);
+            }
+            
+            // ----------------------------------------------------------------------
+            
+            WLOLanguage.JS JS_Engine = new WLOLanguage.JS();
+            JS JS = JS_Engine.CreateContext();
+            JS.OnError += WL.Logger.Error;
+
+            Dictionary<string, string> Scripts = [];
+
+            try{
+                string ScriptsWLPK = Path.Combine(WL.Core.PathToFolderEXE, "GOLUWorldResources.wlpk");
+                if(File.Exists(ScriptsWLPK)){
+                    (string[] Keys, byte[][] Contents) = WL.IO.Unpack(ScriptsWLPK);
+                    for(int i = 0; i < Keys.Length; i++){
+                        if(Keys[i].EndsWith(".js")){
+                            Scripts[Keys[i]] = Encoding.UTF8.GetString(Contents[i]);
+                        }
+                    }
+                }
+                else{
+                    string ScriptsFolder = Path.Combine(WL.Core.PathToFolderEXE, "Game");
+                    if(!Directory.Exists(ScriptsFolder)){
+                        ScriptsFolder = "W:/Other/GOLUWorld/GOLUWorld/Game";
+                        if(!Directory.Exists(ScriptsFolder)){ throw new Exception("Произошла ошибка при загрузке скриптов! А именно ИГРА НЕ НАШЛА! откуда загружать скрипты вообще! Нет скриптов, нет игры. Мб нет файла GOLUWorldResources.wlpk???"); }
+                    }
+
+                    foreach(string ScriptPath in Directory.GetFiles(ScriptsFolder, "*.js", SearchOption.TopDirectoryOnly)){
+                        Scripts[Path.GetRelativePath(ScriptsFolder, ScriptPath).Replace("\\", "/")] = File.ReadAllText(ScriptPath);
+                    }
+                }
+            }catch(Exception e){
+                throw new Exception("Произошла ошибка при загрузке/обнаружении скриптов!", e);
+            }
+
+            try{
+                foreach(string ScriptPath in Scripts.Keys.OrderBy(K => K).ToList()){
+                    try{
+                        WL.Logger.Info($"Запуск: {ScriptPath}");
+                        JS.Execute(Scripts[ScriptPath]);
+                    }catch(Exception e){
+                        throw new Exception($"Произошла ошибка при запуске скрипта: {ScriptPath}", e);
+                    }
+                }
+            }catch(Exception e){
+                throw new Exception("Произошла ошибка при запуске скриптов в JS!", e);
+            }
+            
+            // ----------------------------------------------------------------------
             
             double Step = DeltaTimeInfo.FPSToDT(30);
             LastTicks = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -112,7 +177,7 @@ void main(){
 
                         Matrix4F Model = Matrix4F.CreateScale(new Vector3F(ScaleX, ScaleY, 1));
                         
-                        Screen.Fill(new Color4B((byte)Random.Shared.Next(0, 255), (byte)Random.Shared.Next(0, 255), (byte)Random.Shared.Next(0, 255)));
+                        TEST_FillNoise();
                         
                         Render.Pool.SetTexture2D(Screen, 0);
 
@@ -126,6 +191,9 @@ void main(){
                     Window.PollEvents2();
                 }
             }
+            
+            JS.Dispose();
+            JS_Engine.Dispose();
             
             Screen?.Destroy();
             ScreenMesh?.Destroy();

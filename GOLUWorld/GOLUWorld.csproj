@@ -11,6 +11,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\WoowzLib\WoowzLib\WoowzLib.Window.GLFW\WoowzLib.Window.GLFW.csproj" />
         <ProjectReference Include="..\..\WoowzLib\WoowzLib\WoowzLib.Render.OpenGL\WoowzLib.Render.OpenGL.csproj" />
+        <ProjectReference Include="..\..\WoowzLib\WoowzLib\WoowzLib.Language.JS\WoowzLib.Language.JS.csproj" />
     </ItemGroup>
     
 </Project>
