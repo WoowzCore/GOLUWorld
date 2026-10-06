@@ -39,6 +39,4 @@ const TEST = function(DT){
             ScreenBuffer[index + 2] = 0;
         }
     }
-    
-    Bridge.Render();
 }

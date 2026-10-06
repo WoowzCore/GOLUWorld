@@ -7,8 +7,8 @@ Bridge.LogWarn  = __Core.LogWarn;
 /** @type function(any):void */
 Bridge.LogError = __Core.LogError;
 
-/** @type function(Uint8Array):void */
-Bridge.Render = __Core.Render;
+/** @type function():void */
+Bridge.PersistentRender = __Core.PersistentRender;
 
 // ----------------------------------------------------------------------
 

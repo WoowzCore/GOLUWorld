@@ -1,6 +1,5 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
-using Silk.NET.GLFW;
 using Silk.NET.OpenGL;
 using WLO;
 using WLO.GPU;
@@ -118,40 +117,42 @@ void main(){
                 throw new Exception("Произошла ошибка при загрузке/обнаружении скриптов!", e);
             }
 
+            void RenderScreen(){
+                Screen.Update(FrameBuffer);
+                        
+                View.Viewport = Window.Size;
+                Render.Render(() => {
+                    Vector2I WinSize = Window.Size;
+                    Vector2I TexSize = Screen.Size;
+
+                    float Scale = WL.Math.MinF((float)WinSize.W / TexSize.W, (float)WinSize.H / TexSize.H);
+
+                    float DisplayW = TexSize.W * Scale;
+                    float DisplayH = TexSize.H * Scale;
+
+                    float ScaleX = DisplayW / WinSize.W;
+                    float ScaleY = DisplayH / WinSize.H;
+
+                    Matrix4F Model = Matrix4F.CreateScale(new Vector3F(ScaleX, ScaleY, 1));
+                        
+                    Render.Pool.SetTexture2D(Screen, 0);
+
+                    ScreenProgram.SetUniform(UniformValue.CreateI(LocScreen!.Value, 0));
+                    ScreenProgram.SetUniform(UniformValue.CreateM4F(LocModel!.Value, Model));
+                        
+                    Render.Draw(ScreenMesh, ScreenProgram);
+                });
+                    
+                Window.SwapBuffers();
+            }
+            
             try{
                 JS.SetVariable("__Core", new {
                     LogInfo  = new Action<object>(Message => WL.Logger.Info (Message?.ToString() ?? "null")),
                     LogWarn  = new Action<object>(Message => WL.Logger.Warn (Message?.ToString() ?? "null")),
                     LogError = new Action<object>(Message => WL.Logger.Error(Message?.ToString() ?? "null")),
                     
-                    Render = new Action(() => {
-                        Screen.Update(FrameBuffer);
-                        
-                        View.Viewport = Window.Size;
-                        Render.Render(() => {
-                            Vector2I WinSize = Window.Size;
-                            Vector2I TexSize = Screen.Size;
-
-                            float Scale = WL.Math.MinF((float)WinSize.W / TexSize.W, (float)WinSize.H / TexSize.H);
-
-                            float DisplayW = TexSize.W * Scale;
-                            float DisplayH = TexSize.H * Scale;
-
-                            float ScaleX = DisplayW / WinSize.W;
-                            float ScaleY = DisplayH / WinSize.H;
-
-                            Matrix4F Model = Matrix4F.CreateScale(new Vector3F(ScaleX, ScaleY, 1));
-                        
-                            Render.Pool.SetTexture2D(Screen, 0);
-
-                            ScreenProgram.SetUniform(UniformValue.CreateI(LocScreen!.Value, 0));
-                            ScreenProgram.SetUniform(UniformValue.CreateM4F(LocModel!.Value, Model));
-                        
-                            Render.Draw(ScreenMesh, ScreenProgram);
-                        });
-                    
-                        Window.SwapBuffers();
-                    })
+                    PersistentRender = new Action(RenderScreen)
                 });   
             }catch(Exception e){
                 throw new Exception("Произошла ошибка при загрузке базовых функций JS!", e);
@@ -187,8 +188,12 @@ void main(){
             LastTicks = System.Diagnostics.Stopwatch.GetTimestamp();
             while(!Window.IsClosed){
                 Window.PollEvents();
-                
-                Accumulator += WL.Thread.GetRawDT(ref LastTicks);
+
+                double DT = WL.Thread.GetRawDT(ref LastTicks);
+
+                if(DT > 0.2){ DT = 0.2; }
+
+                Accumulator += DT;
                 
                 while(WL.Thread.NeedFixedUpdate(ref Accumulator, Step)){
                     DTI = new DeltaTimeInfo(0, Step);
@@ -198,6 +203,8 @@ void main(){
                     }catch(Exception e){
                         WL.Logger.Error("Произошла ошибка в игровом цикле!", e);
                     }
+                    
+                    RenderScreen();
                     
                     Window.PollEvents2();
                 }
