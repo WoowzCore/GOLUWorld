@@ -186,6 +186,7 @@ void main(){
             
             double Step = DeltaTimeInfo.FPSToDT(30);
             LastTicks = System.Diagnostics.Stopwatch.GetTimestamp();
+
             while(!Window.IsClosed){
                 Window.PollEvents();
 

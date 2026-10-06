@@ -16,7 +16,7 @@ const TEST = function(DT){
         ScreenBuffer[i + 2] = 40;
     }
 
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 2000; i++) {
         let rx = Math.floor(Math.random() * ScreenW);
         let ry = Math.floor(Math.random() * ScreenH);
         let index = (ry * ScreenW + rx) * 3;
@@ -26,7 +26,7 @@ const TEST = function(DT){
         ScreenBuffer[index + 2] = 255;
     }
 
-    posX = (posX + DT * 100) % ScreenW;
+    posX = (posX + DT * 1000) % ScreenW;
     let intPosX = Math.floor(posX);
 
     for (let y = 80; y < 120; y++) {
