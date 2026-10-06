@@ -24,24 +24,17 @@ public struct GOLUVertex{
 public static class Program{
     public static int Main(string[] Args){
         try{
-            WLO.Window.GLFW Window = null!;
-
-            double Accumulator = 0;
-            long   LastTicks   = 0;
-
-            DeltaTimeInfo DTI = default;
-
-            OpenGL      Render = null!;
-            GLView      View   = null!;
-            GLTexture2D Screen = null!;
+            WL.Core.Start(Args);
             
-            Window = new GLFW(new Vector2I(800, 600), "GOLUWorld : C# Instance");
+            WL.Core.ProjectInfo = new ProjectInfo("GOLUWorld", Author: "Woowz11", License: "Look at Repo (WIP)"); //todo
+            
+            WLO.Window.GLFW Window = new GLFW(new Vector2I(800, 600), "GOLUWorld : C# Instance");
             Window.TODO_UseDarkMode();
 
-            Render = new OpenGL(Window.GetProcAddress, new OpenGL.StartParameters{
+            OpenGL Render = new OpenGL(Window.GetProcAddress, new OpenGL.StartParameters{
                 DebugLogger = false
             }, true);
-            View = Render.Pool.DefaultView;
+            GLView View = Render.Pool.DefaultView;
 
             WLO.Geometry Quad = WL.Geometry.CreateQuad(1);
 
@@ -83,24 +76,14 @@ void main(){
             int? LocScreen = ScreenProgram.GetLocationFromName("Screen");
             int? LocModel  = ScreenProgram.GetLocationFromName("Model");
             
-            Screen = Render.CreateTexture2D(new Vector2I(384, 216));
-            Screen.SetFilter(TextureMinFilter.Nearest);
+            Vector2I ScreenSize = new Vector2I(384, 216);
+            int ScreenExpectedLength = ScreenSize.W * ScreenSize.H * 3;
+
+            byte[] FrameBuffer = new byte[ScreenExpectedLength];
             
-            void TEST_FillNoise() {
-                int totalPixels = Screen.Size.W * Screen.Size.H;
-                Color4B[] noise = new Color4B[totalPixels];
-    
-                for (int i = 0; i < totalPixels; i++) {
-                    noise[i] = new Color4B(
-                        (byte)Random.Shared.Next(0, 256),
-                        (byte)Random.Shared.Next(0, 256),
-                        (byte)Random.Shared.Next(0, 256),
-                        255
-                    );
-                }
-    
-                Screen.Update(noise);
-            }
+            GLTexture2D Screen = GLTexture2D.Create(Render, ScreenSize, InternalFormat.Rgb, PixelFormat.Rgb, PixelType.UnsignedByte);
+            Screen.SetFilter(TextureMinFilter.Nearest);
+            Screen.Fill(new Color4B(255, 255, 255));
             
             // ----------------------------------------------------------------------
             
@@ -136,6 +119,45 @@ void main(){
             }
 
             try{
+                JS.SetVariable("__Core", new {
+                    LogInfo  = new Action<object>(Message => WL.Logger.Info (Message?.ToString() ?? "null")),
+                    LogWarn  = new Action<object>(Message => WL.Logger.Warn (Message?.ToString() ?? "null")),
+                    LogError = new Action<object>(Message => WL.Logger.Error(Message?.ToString() ?? "null")),
+                    
+                    Render = new Action(() => {
+                        Screen.Update(FrameBuffer);
+                        
+                        View.Viewport = Window.Size;
+                        Render.Render(() => {
+                            Vector2I WinSize = Window.Size;
+                            Vector2I TexSize = Screen.Size;
+
+                            float Scale = WL.Math.MinF((float)WinSize.W / TexSize.W, (float)WinSize.H / TexSize.H);
+
+                            float DisplayW = TexSize.W * Scale;
+                            float DisplayH = TexSize.H * Scale;
+
+                            float ScaleX = DisplayW / WinSize.W;
+                            float ScaleY = DisplayH / WinSize.H;
+
+                            Matrix4F Model = Matrix4F.CreateScale(new Vector3F(ScaleX, ScaleY, 1));
+                        
+                            Render.Pool.SetTexture2D(Screen, 0);
+
+                            ScreenProgram.SetUniform(UniformValue.CreateI(LocScreen!.Value, 0));
+                            ScreenProgram.SetUniform(UniformValue.CreateM4F(LocModel!.Value, Model));
+                        
+                            Render.Draw(ScreenMesh, ScreenProgram);
+                        });
+                    
+                        Window.SwapBuffers();
+                    })
+                });   
+            }catch(Exception e){
+                throw new Exception("Произошла ошибка при загрузке базовых функций JS!", e);
+            }
+            
+            try{
                 foreach(string ScriptPath in Scripts.Keys.OrderBy(K => K).ToList()){
                     try{
                         WL.Logger.Info($"Запуск: {ScriptPath}");
@@ -147,8 +169,19 @@ void main(){
             }catch(Exception e){
                 throw new Exception("Произошла ошибка при запуске скриптов в JS!", e);
             }
+
+            try{
+                JS.Call("Bridge.Hook.Start", [true, ScreenSize.W, ScreenSize.H, FrameBuffer]);
+            }catch(Exception e){
+                throw new Exception("Произошла ошибка при запуске игры JS!", e);
+            }
             
             // ----------------------------------------------------------------------
+            
+            double Accumulator = 0;
+            long   LastTicks   = 0;
+
+            DeltaTimeInfo DTI = default;
             
             double Step = DeltaTimeInfo.FPSToDT(30);
             LastTicks = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -159,35 +192,13 @@ void main(){
                 
                 while(WL.Thread.NeedFixedUpdate(ref Accumulator, Step)){
                     DTI = new DeltaTimeInfo(0, Step);
-                 
-                    View.Viewport = Window.Size;
-                    Render.Render(() => {
-                        Render.Clear(Color4B.Black);
 
-                        Vector2I WinSize = Window.Size;
-                        Vector2I TexSize = Screen.Size;
-
-                        float Scale = WL.Math.MinF((float)WinSize.W / TexSize.W, (float)WinSize.H / TexSize.H);
-
-                        float DisplayW = TexSize.W * Scale;
-                        float DisplayH = TexSize.H * Scale;
-
-                        float ScaleX = DisplayW / WinSize.W;
-                        float ScaleY = DisplayH / WinSize.H;
-
-                        Matrix4F Model = Matrix4F.CreateScale(new Vector3F(ScaleX, ScaleY, 1));
-                        
-                        TEST_FillNoise();
-                        
-                        Render.Pool.SetTexture2D(Screen, 0);
-
-                        ScreenProgram.SetUniform(UniformValue.CreateI(LocScreen!.Value, 0));
-                        ScreenProgram.SetUniform(UniformValue.CreateM4F(LocModel!.Value, Model));
-                        
-                        Render.Draw(ScreenMesh, ScreenProgram);
-                    });
+                    try{
+                        JS.Call("Bridge.Hook.Cycle", [DTI.DT]);
+                    }catch(Exception e){
+                        WL.Logger.Error("Произошла ошибка в игровом цикле!", e);
+                    }
                     
-                    Window.SwapBuffers();
                     Window.PollEvents2();
                 }
             }
