@@ -5,12 +5,12 @@ const TEST = function(DT) {
     Tick += DT;
 
     let r = Math.sin(Tick) * 50 + 50;
-    Graphic.Clear(r, 20, 40);
+    //Graphic.Clear(r, 20, 40);
 
     for (let i = 0; i < 2000; i++) {
         let rx = Math.floor(Math.random() * Graphic.ScreenSizeW);
         let ry = Math.floor(Math.random() * Graphic.ScreenSizeH);
-        Graphic.SetPixel(rx, ry, 255, 255, 255);
+        Graphic.SetPixel(rx, ry, Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
     }
 
     posX = (posX + DT * 200) % Graphic.ScreenSizeW;

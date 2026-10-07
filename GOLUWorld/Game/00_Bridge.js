@@ -16,7 +16,7 @@ Bridge.Value = {}
 
 Bridge.Value.ThatEXE = false;
 Bridge.Value.ScreenSize = [0, 0];
-/** @type Uint8Array */
+/** @type Uint32Array */
 Bridge.Value.FrameBuffer = null;
 
 // ----------------------------------------------------------------------

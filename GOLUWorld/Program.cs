@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
+using Jint.Native;
 using Silk.NET.OpenGL;
 using WLO;
 using WLO.GPU;
@@ -76,11 +77,9 @@ void main(){
             int? LocModel  = ScreenProgram.GetLocationFromName("Model");
             
             Vector2I ScreenSize = new Vector2I(384, 216);
-            int ScreenExpectedLength = ScreenSize.W * ScreenSize.H * 3;
-
-            byte[] FrameBuffer = new byte[ScreenExpectedLength];
+            byte[] FrameBuffer = new byte[ScreenSize.W * ScreenSize.H * 4];
             
-            GLTexture2D Screen = GLTexture2D.Create(Render, ScreenSize, InternalFormat.Rgb, PixelFormat.Rgb, PixelType.UnsignedByte);
+            GLTexture2D Screen = GLTexture2D.Create(Render, ScreenSize, InternalFormat.Rgba8, PixelFormat.Rgba, PixelType.UnsignedByte);
             Screen.SetFilter(TextureMinFilter.Nearest);
             Screen.Fill(new Color4B(255, 255, 255));
             
@@ -90,6 +89,9 @@ void main(){
             JS JS = JS_Engine.CreateContext();
             JS.OnError += WL.Logger.Error;
 
+            JsArrayBuffer ArrayBuffer = JS.__Engine.Intrinsics.ArrayBuffer.Construct(FrameBuffer);
+            JsTypedArray  UInt32Array = JS.__Engine.Intrinsics.Uint32Array.Construct(ArrayBuffer);
+            
             Dictionary<string, string> Scripts = [];
 
             try{
@@ -172,7 +174,7 @@ void main(){
             }
 
             try{
-                JS.Call("Bridge.Hook.Start", [true, ScreenSize.W, ScreenSize.H, FrameBuffer]);
+                JS.Call("Bridge.Hook.Start", [true, ScreenSize.W, ScreenSize.H, UInt32Array]);
             }catch(Exception e){
                 throw new Exception("Произошла ошибка при запуске игры JS!", e);
             }
