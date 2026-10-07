@@ -27,7 +27,7 @@ public static class Program{
             
             WL.Core.ProjectInfo = new ProjectInfo("GOLUWorld", Author: "Woowz11", License: "Look at Repo (WIP)"); //todo
             
-            WLO.Window.GLFW Window = new GLFW(new Vector2I(800, 600), "GOLUWorld : C# Instance");
+            WLO.Window.GLFW Window = new GLFW(new Vector2I(800, 600), "Loading...");
             Window.TODO_UseDarkMode();
 
             OpenGL Render = new OpenGL(Window.GetProcAddress, new OpenGL.StartParameters{
@@ -178,37 +178,28 @@ void main(){
             }
             
             // ----------------------------------------------------------------------
-            
-            double Accumulator = 0;
-            long   LastTicks   = 0;
 
-            DeltaTimeInfo DTI = default;
-            
-            double Step = DeltaTimeInfo.FPSToDT(30);
-            LastTicks = System.Diagnostics.Stopwatch.GetTimestamp();
+            DeltaTimeInfo? DTI__ = null;
+            double TargetDT = DeltaTimeInfo.FPSToDT(30);
 
             while(!Window.IsClosed){
                 Window.PollEvents();
 
-                double DT = WL.Thread.GetRawDT(ref LastTicks);
-
-                if(DT > 0.2){ DT = 0.2; }
-
-                Accumulator += DT;
-                
-                while(WL.Thread.NeedFixedUpdate(ref Accumulator, Step)){
-                    DTI = new DeltaTimeInfo(0, Step);
-
+                if(WL.Thread.LimitByDeltaTime(TargetDT, ref DTI__)){
+                    DeltaTimeInfo DTI = DTI__!.Value;
+                    
                     try{
-                        JS.Call("Bridge.Hook.Cycle", [DTI.DT]);
+                        JS.Call("Bridge.Hook.Cycle", [DTI.DT, DTI.FPS]);
                     }catch(Exception e){
                         WL.Logger.Error("Произошла ошибка в игровом цикле!", e);
                     }
+
+                    Window.Title = (JS.Call("Bridge.Hook.WindowTitle") as string)!;
                     
                     RenderScreen();
-                    
-                    Window.PollEvents2();
                 }
+                
+                Window.PollEvents2();
             }
             
             JS.Dispose();

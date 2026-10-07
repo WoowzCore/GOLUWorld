@@ -29,8 +29,18 @@ Bridge.Hook.Start = function(ThatEXE, ScreenSizeW, ScreenSizeH, FrameBuffer){
     Bridge.Value.FrameBuffer = FrameBuffer;
     
     Log.Info(`HI AND WELCOME TO ${(ThatEXE ? "EXE" : "WEB SITE")}`)
+    
+    Graphic.Start();
+    Game.Start();
 }
 
-Bridge.Hook.Cycle = function(DT){
+Bridge.Hook.Cycle = function(DT, FPS){
+    Game.DT = DT;
+    Game.FPS = FPS;
+    
     TEST(DT);
+}
+
+Bridge.Hook.WindowTitle = function(){
+    return Game.GenerateWindowTitle();
 }

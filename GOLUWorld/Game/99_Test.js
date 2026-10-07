@@ -1,42 +1,31 @@
 ﻿var Tick = 0;
 var posX = 0;
 
-const TEST = function(DT){
+const TEST = function(DT) {
     Tick += DT;
-    
-    let ScreenBuffer = Bridge.Value.FrameBuffer;
-    let ScreenW = Bridge.Value.ScreenSize[0];
-    let ScreenH = Bridge.Value.ScreenSize[1];
-    
+
     let r = Math.sin(Tick) * 50 + 50;
-    
-    for(let i = 0; i < ScreenBuffer.length; i += 3){
-        ScreenBuffer[i] = r;
-        ScreenBuffer[i + 1] = 20;
-        ScreenBuffer[i + 2] = 40;
-    }
+    Graphic.Clear(r, 20, 40);
 
     for (let i = 0; i < 2000; i++) {
-        let rx = Math.floor(Math.random() * ScreenW);
-        let ry = Math.floor(Math.random() * ScreenH);
-        let index = (ry * ScreenW + rx) * 3;
-
-        ScreenBuffer[index]     = 255;
-        ScreenBuffer[index + 1] = 255;
-        ScreenBuffer[index + 2] = 255;
+        let rx = Math.floor(Math.random() * Graphic.ScreenSizeW);
+        let ry = Math.floor(Math.random() * Graphic.ScreenSizeH);
+        Graphic.SetPixel(rx, ry, 255, 255, 255);
     }
 
-    posX = (posX + DT * 1000) % ScreenW;
+    posX = (posX + DT * 200) % Graphic.ScreenSizeW;
     let intPosX = Math.floor(posX);
 
-    for (let y = 80; y < 120; y++) {
-        for (let x = intPosX; x < intPosX + 40; x++) {
-            if (x >= ScreenW) continue;
+    Graphic.DrawRect(intPosX, 80, 40, 40, 255, 255, 0);
 
-            let index = (y * ScreenW + x) * 3;
-            ScreenBuffer[index]     = 255;
-            ScreenBuffer[index + 1] = 255;
-            ScreenBuffer[index + 2] = 0;
-        }
-    }
+    Graphic.DrawRect(0, 150, Graphic.ScreenSizeW, 20, 0, 100, 255, 128);
+
+    Graphic.Effect(GRAPHIC_EFFECT_INVERT, () => {
+        Graphic.DrawRect(150, 50, 80, 80, 255, 255, 255);
+    });
+    
+    Graphic.Effect(GRAPHIC_EFFECT_ADD, () => {
+        let pulse = Math.abs(Math.sin(Tick * 2)) * 100;
+        Graphic.DrawRect(200, 100, 30, 30, pulse, pulse, pulse);
+    });
 }
