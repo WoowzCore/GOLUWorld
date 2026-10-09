@@ -2,8 +2,10 @@
     constructor(Name, ID, Width, Height, HasAlpha, IsGray, Data){
         this.Name = Name;
         this.ID = ID;
-        this.Width = Width;
-        this.Height = Height;
+        
+        this.Width = this.W = Width;
+        this.Height = this.H = Height;
+        
         this.HasAlpha = HasAlpha;
         this.IsGray = IsGray;
         this.Data = Data;
@@ -11,8 +13,12 @@
     
     Name = "";
     ID = -1;
+    
     Width = -1;
     Height = -1;
+    W = -1;
+    H = -1;
+    
     HasAlpha = false;
     IsGray = false;
     /** @type Uint32Array */

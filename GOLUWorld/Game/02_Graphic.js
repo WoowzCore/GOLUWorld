@@ -8,39 +8,95 @@ const GRAPHIC_EFFECT_INVERT = 5;
 const Graphic = {}
 
 Graphic.__Effect = GRAPHIC_EFFECT_NORMAL;
+Graphic.__Clip = { X1: 0, Y1: 0, X2: 0, Y2: 0 }
 
 /** @type Uint32Array */
 Graphic.Buffer = null;
-Graphic.ScreenSize = [0, 0];
-Graphic.ScreenSizeW = 0;
-Graphic.ScreenSizeH = 0;
+Graphic.BufferSize = [0, 0];
+Graphic.BufferW = 0;
+Graphic.BufferH = 0;
 Graphic.Div255 = 1 / 255;
 
 Graphic.Start = function(){
-    Graphic.Buffer      = Bridge.Value.FrameBuffer;
-    Graphic.ScreenSize  = Bridge.Value.ScreenSize;
-    Graphic.ScreenSizeW = Graphic.ScreenSize[0];
-    Graphic.ScreenSizeH = Graphic.ScreenSize[1];
+    Graphic.Buffer     = Bridge.Value.FrameBuffer;
+    Graphic.BufferSize = Bridge.Value.ScreenSize;
+    Graphic.BufferW    = Graphic.BufferSize[0];
+    Graphic.BufferH    = Graphic.BufferSize[1];
+
+    Graphic.__Clip.X1 = 0;
+    Graphic.__Clip.Y1 = 0;
+    Graphic.__Clip.X2 = Graphic.BufferW;
+    Graphic.__Clip.Y2 = Graphic.BufferH;
 }
 
 Graphic.Effect = function(Effect, Function){
-    let PushEffect = Graphic.__Effect;
+    let OldEffect = Graphic.__Effect;
     Graphic.__Effect = Effect;
     Function();
-    Graphic.__Effect = PushEffect;
+    Graphic.__Effect = OldEffect;
+}
+
+Graphic.Clip = function(X1, Y1, X2, Y2, Function){
+    let OldClipX1 = Graphic.__Clip.X1;
+    let OldClipY1 = Graphic.__Clip.Y1;
+    let OldClipX2 = Graphic.__Clip.X2;
+    let OldClipY2 = Graphic.__Clip.Y2;
+    
+    Graphic.__Clip.X1 = Math.max(0, X1) | 0;
+    Graphic.__Clip.Y1 = Math.max(0, Y1) | 0;
+    Graphic.__Clip.X2 = Math.min(Graphic.BufferW, X2) | 0;
+    Graphic.__Clip.Y2 = Math.min(Graphic.BufferH, Y2) | 0;
+    
+    Function();
+
+    Graphic.__Clip.X1 = OldClipX1;
+    Graphic.__Clip.Y1 = OldClipY1;
+    Graphic.__Clip.X2 = OldClipX2;
+    Graphic.__Clip.Y2 = OldClipY2;
+}
+
+Graphic.Canvas = function(W, H, X, Y, SW, SH, PX, PY, Rot, Function){
+    const CanvasData = new Uint32Array(W * H);
+    
+    const OldBuffer = Graphic.Buffer;
+    const OldW = Graphic.BufferW;
+    const OldH = Graphic.BufferH;
+    const OldClip = { ...Graphic.__Clip };
+    
+    Graphic.Buffer = CanvasData;
+    Graphic.BufferW = W;
+    Graphic.BufferH = H;
+    Graphic.__Clip = { X1: 0, Y1: 0, X2: W, Y2: H };
+    
+    Function(W, H);
+    
+    Graphic.Buffer = OldBuffer;
+    Graphic.BufferW = OldW;
+    Graphic.BufferH = OldH;
+    Graphic.__Clip = OldClip;
+    
+    Graphic.DrawPixelsTransformed(CanvasData, W, H, X, Y, SW, SH, PX, PY, Rot);
 }
 
 Graphic.Clear = function(R, G, B){
     Graphic.Buffer.fill((255 << 24) | (B << 16) | (G << 8) | R);
 }
 
-Graphic.PixelOut = function(X, Y, W, H){
-    return X < 0 || X >= W || Y < 0 || Y >= H;
+Graphic.In = function(X, Y, X1, Y1, X2, Y2){
+    return X >= X1 && X < X2 && Y >= Y1 && Y < Y2;
+}
+
+Graphic.InBuffer = function(X, Y){
+    return Graphic.In(X, Y, 0, 0, Graphic.BufferW, Graphic.BufferH);
+}
+
+Graphic.InClip = function(X, Y){
+    return Graphic.In(X, Y, Graphic.__Clip.X1, Graphic.__Clip.Y1, Graphic.__Clip.X2, Graphic.__Clip.Y2);
 }
 
 Graphic.GetPixel = function(X, Y){
-    if(Graphic.PixelOut(X, Y, Graphic.ScreenSizeW, Graphic.ScreenSizeH)){ return [0, 0, 0, 0]; }
-    const Color = Graphic.Buffer[(Y | 0) * Graphic.ScreenSizeW + (X | 0)];
+    if(!Graphic.InBuffer(X, Y)){ return [0, 0, 0, 0, true]; }
+    const Color = Graphic.Buffer[(Y | 0) * Graphic.BufferW + (X | 0)];
     return [
          Color        & 0xFF,
         (Color >> 8 ) & 0xFF,
@@ -102,9 +158,9 @@ Graphic.CalculateColor = function(DR, DG, DB, R, G, B, A, Effect){
 }
 
 Graphic.SetPixel = function(X, Y, R, G, B, A = 255){
-    if(A === 0 || Graphic.PixelOut(X, Y, Graphic.ScreenSizeW, Graphic.ScreenSizeH)){ return; }
+    if(A === 0 || !Graphic.InClip(X, Y)){ return; }
     
-    const Index = (Y | 0) * Graphic.ScreenSizeW + (X | 0);
+    const Index = (Y | 0) * Graphic.BufferW + (X | 0);
     const Buf = Graphic.Buffer;
 
     if (Graphic.__Effect === GRAPHIC_EFFECT_NORMAL && A === 255) {
@@ -122,19 +178,18 @@ Graphic.SetPixel = function(X, Y, R, G, B, A = 255){
     Buf[Index] = (255 << 24) | (Graphic.CalculateColorResult.B << 16) | (Graphic.CalculateColorResult.G << 8) | Graphic.CalculateColorResult.R;
 }
 
-Graphic.DrawRect = function(X, Y, W, H, R, G, B, A = 255){
+Graphic.DrawRect = function(X1, Y1, X2, Y2, R, G, B, A = 255){
     if(A === 0){ return; }
-
-    const SW = Graphic.ScreenSizeW;
-    const SH = Graphic.ScreenSizeH;
-    const Buf = Graphic.Buffer;
     
-    let X1 = Math.max(0, X) | 0;
-    let Y1 = Math.max(0, Y) | 0;
-    let X2 = Math.min(SW, X + W) | 0;
-    let Y2 = Math.min(SH, Y + H) | 0;
+    X1 = Math.max(Graphic.__Clip.X1, X1) | 0;
+    Y1 = Math.max(Graphic.__Clip.Y1, Y1) | 0;
+    X2 = Math.min(Graphic.__Clip.X2, X2) | 0;
+    Y2 = Math.min(Graphic.__Clip.Y2, Y2) | 0;
     
     if(X1 >= X2 || Y1 >= Y2){ return; }
+
+    const SW = Graphic.BufferW;
+    const Buf = Graphic.Buffer;
     
     const Effect = Graphic.__Effect;
     
@@ -166,18 +221,17 @@ Graphic.DrawRect = function(X, Y, W, H, R, G, B, A = 255){
 Graphic.DrawPixels = function(X, Y, W, Data){
     if(!Data){ return; }
     
-    const SW = Graphic.ScreenSizeW;
-    const SH = Graphic.ScreenSizeH;
-    const Buf = Graphic.Buffer;
-    
     const H = (Data.length / W) | 0;
 
-    let X1 = Math.max(0, X) | 0;
-    let Y1 = Math.max(0, Y) | 0;
-    let X2 = Math.min(SW, X + W) | 0;
-    let Y2 = Math.min(SH, Y + H) | 0;
+    let X1 = Math.max(Graphic.__Clip.X1, X) | 0;
+    let Y1 = Math.max(Graphic.__Clip.Y1, Y) | 0;
+    let X2 = Math.min(Graphic.__Clip.X2, X + W) | 0;
+    let Y2 = Math.min(Graphic.__Clip.Y2, Y + H) | 0;
     
     if(X1 >= X2 || Y1 >= Y2){ return; }
+
+    const SW = Graphic.BufferW;
+    const Buf = Graphic.Buffer;
     
     const Effect = Graphic.__Effect;
     
@@ -205,11 +259,11 @@ Graphic.DrawPixels = function(X, Y, W, Data){
                 const DColor = Buf[BufIndex];
                 const DR =  DColor        & 0xFF;
                 const DG = (DColor >> 8 ) & 0xFF;
-                const Db = (DColor >> 16) & 0xFF;
+                const DB = (DColor >> 16) & 0xFF;
                 
                 Graphic.CalculateColor(DR, DG, DB, R, G, B, A, Effect);
                 
-                Buf[BufIndex] = (255 << 24) | (Graphic.CalculateColorResult.B << 16) | (Graphic.CalculateColorResult.B << 8) | Graphic.CalculateColorResult.R;
+                Buf[BufIndex] = (255 << 24) | (Graphic.CalculateColorResult.B << 16) | (Graphic.CalculateColorResult.G << 8) | Graphic.CalculateColorResult.R;
             }
         }
     }
@@ -218,4 +272,40 @@ Graphic.DrawPixels = function(X, Y, W, Data){
 Graphic.DrawSprite = function(X, Y, Sprite){
     if(!Sprite){ return; }
     Graphic.DrawPixels(X, Y, Sprite.Width, Sprite.Data);
+}
+
+Graphic.DrawPixelsTransformed = function(Data, W, H, X, Y, SW, SH, PX, PY, Rot){
+    const Cos = Math.cos(Rot);
+    const Sin = Math.sin(Rot);
+
+    const PivotX = W * (0.5 + PX * 0.5);
+    const PivotY = H * (0.5 - PY * 0.5);
+
+    const MaxDim = Math.sqrt(W*W + H*H) * Math.max(Math.abs(SW), Math.abs(SH));
+    let X1 = Math.max(Graphic.__Clip.X1, X - MaxDim) | 0;
+    let Y1 = Math.max(Graphic.__Clip.Y1, Y - MaxDim) | 0;
+    let X2 = Math.min(Graphic.__Clip.X2, X + MaxDim) | 0;
+    let Y2 = Math.min(Graphic.__Clip.Y2, Y + MaxDim) | 0;
+    
+    for(let SY = Y1; SY < Y2; SY++){
+        for(let SX = X1; SX < X2; SX++){
+            let DX = (SX - X);
+            let DY = (SY - Y);
+            
+            DX /= SW;
+            DY /= SH;
+
+            let RX = (DX * Cos + DY * Sin) + PivotX;
+            let RY = (DY * Cos - DX * Sin) + PivotY;
+            
+            if(RX >= 0 && RX < W && RY >= 0 && RY < H){
+                const Color = Data[(RY | 0) * W + (RX | 0)];
+                const A = (Color >> 24 & 0xFF);
+                
+                if(A > 0){
+                    Graphic.SetPixel(SX, SY, Color & 0xFF, (Color >> 8) & 0xFF, (Color >> 16) & 0xFF, A);
+                }
+            }
+        }
+    }
 }

@@ -4,31 +4,59 @@ var posX = 0;
 const TEST = function(DT) {
     Tick += DT;
 
-    let r = Math.sin(Tick) * 50 + 50;
-    //Graphic.Clear(r, 20, 40);
+    Graphic.Clear(10, 10, 10);
 
-    for (let i = 0; i < 2000; i++) {
-        let rx = Math.floor(Math.random() * Graphic.ScreenSizeW);
-        let ry = Math.floor(Math.random() * Graphic.ScreenSizeH);
-        Graphic.SetPixel(rx, ry, Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
+    for(let i = 0; i < 2000; i++){
+        Graphic.SetPixel(Math.floor(Math.random() * 128), Math.floor(Math.random() * 128), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
     }
-
-    posX = (posX + DT * 200) % Graphic.ScreenSizeW;
-    let intPosX = Math.floor(posX);
-
-    Graphic.DrawRect(intPosX, 80, 40, 40, 255, 255, 0);
-
-    Graphic.DrawRect(0, 150, Graphic.ScreenSizeW, 20, 0, 100, 255, 128);
-
-    Graphic.Effect(GRAPHIC_EFFECT_INVERT, () => {
-        Graphic.DrawRect(150, 50, 80, 80, 255, 255, 255);
+    
+    let pulse2 = Math.abs(Math.sin(Tick * 0.5)) * 200;
+    Graphic.Effect(GRAPHIC_EFFECT_XOR, () => {
+        Graphic.DrawSprite(pulse2, pulse2, Sprite_Test)
     });
+
+    Graphic.DrawRect(Graphic.BufferW - Sprite_Test.Width, 0, Graphic.BufferW, Sprite_Test.Height, 0, 0, 255)
+    Graphic.Clip(Graphic.BufferW - Sprite_Test.Width, 0, Graphic.BufferW, Sprite_Test.Height, () => {
+        Graphic.DrawSprite(Graphic.BufferW - (Math.cos(Tick * 2) * Sprite_Test.Width * 0.5) - Sprite_Test.Width, Math.sin(Tick * 2) * Sprite_Test.Height  * 0.5, Sprite_Test)
+    })
+
+    let targetX = Graphic.BufferW - 64;
+    let targetY = Graphic.BufferH - 64;
+
+    Graphic.DrawSprite(targetX, targetY, Sprite_Test);
+
+    let centerX = targetX + Sprite_Test.Width * 0.5;
+    let centerY = targetY + Sprite_Test.Height * 0.5;
+
+    Graphic.Canvas(64, 64, centerX, centerY, 1, 1, 0, 0, Tick, (W, H) => {
+
+        let drawX = W * 0.5 - Sprite_Test.Width * 0.5;
+        let drawY = H * 0.5 - Sprite_Test.Height * 0.5;
+
+        Graphic.DrawSprite(drawX, drawY, Sprite_Test);
+    });
+
+    Graphic.Canvas(64, 64, centerX - 64, centerY, (0.5 + Math.sin(Tick) * 0.5) * 2, (0.5 + Math.cos(Tick * 2) * 0.5) * 2, 0, 0, 0, (W, H) => {
+
+        let drawX = W * 0.5 - Sprite_Test.Width * 0.5;
+        let drawY = H * 0.5 - Sprite_Test.Height * 0.5;
+
+        Graphic.DrawSprite(drawX, drawY, Sprite_Test);
+    });
+    
+    Graphic.DrawRect(0, 150, 0 + Graphic.BufferW, 150 + 20, 0, 100, 255, 128);
+
+    Graphic.DrawRect(150, 50, 150 + 80, 50 + 80, 255, 0, 0);
     
     Graphic.Effect(GRAPHIC_EFFECT_ADD, () => {
         let pulse = Math.abs(Math.sin(Tick * 2)) * 100;
-        Graphic.DrawRect(200, 100, 30, 30, pulse, pulse, pulse);
+        Graphic.DrawRect(200, 100, 200 + 30, 100 + 30, pulse, pulse, pulse);
     });
 
-    let pulse2 = Math.abs(Math.sin(Tick)) * 100;
-    Graphic.DrawSprite(pulse2, pulse2, Sprite_Test)
+    posX = (posX + DT * 200) % Graphic.BufferW;
+    let intPosX = Math.floor(posX);
+
+    Graphic.Effect(GRAPHIC_EFFECT_INVERT, () => {
+        Graphic.DrawRect(intPosX, 80, intPosX + 40, 80 + 40, 255, 255, 255);
+    });
 }
