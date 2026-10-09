@@ -15,5 +15,5 @@ Game.GenerateWindowTitle = function(){
     __FPSTimer += Game.DT;
     if(__FPSTimer > 1){ __FPSTimer = 0; __FPSCache = Game.FPS; }
     
-    return `GOLUWorld : C# Instance : ${__FPSCache.toFixed(1)}`;
+    return `GOLUWorld : ${(Game.IsEXE ? "C#" : "WEB")} Instance : ${__FPSCache.toFixed(1)}`;
 }

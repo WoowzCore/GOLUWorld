@@ -28,4 +28,7 @@ const TEST = function(DT) {
         let pulse = Math.abs(Math.sin(Tick * 2)) * 100;
         Graphic.DrawRect(200, 100, 30, 30, pulse, pulse, pulse);
     });
+
+    let pulse2 = Math.abs(Math.sin(Tick)) * 100;
+    Graphic.DrawSprite(pulse2, pulse2, Sprite_Test)
 }

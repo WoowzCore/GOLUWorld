@@ -37,6 +37,8 @@ public static class Program{
             GLView View = Render.Pool.DefaultView;
 
             WLO.Geometry Quad = WL.Geometry.CreateQuad(1);
+            Span<Vertex> __QuadVerticesSpan = Quad.VerticesSpan;
+            for(int i = 0; i < __QuadVerticesSpan.Length; i++){ __QuadVerticesSpan[i].UV.Y = 1f - __QuadVerticesSpan[i].UV.Y; }
 
             VertexLayout Layout = new VertexLayout(
                 new VertexAttribute("Position", 3, VertexAttribute.AttributeType.Float),
@@ -81,7 +83,6 @@ void main(){
             
             GLTexture2D Screen = GLTexture2D.Create(Render, ScreenSize, InternalFormat.Rgba8, PixelFormat.Rgba, PixelType.UnsignedByte);
             Screen.SetFilter(TextureMinFilter.Nearest);
-            Screen.Fill(new Color4B(255, 255, 255));
             
             // ----------------------------------------------------------------------
             
@@ -154,7 +155,16 @@ void main(){
                     LogWarn  = new Action<object>(Message => WL.Logger.Warn (Message?.ToString() ?? "null")),
                     LogError = new Action<object>(Message => WL.Logger.Error(Message?.ToString() ?? "null")),
                     
-                    PersistentRender = new Action(RenderScreen)
+                    PersistentRender = new Action(RenderScreen),
+                    
+                    Base64ToBytes = new Func<string, byte[]>(Base64 => {
+                        try{
+                            return Convert.FromBase64String(Base64);
+                        }catch(Exception e){
+                            WL.Logger.Error("Ошибка декодирования Base64!", e);
+                            return [];
+                        }
+                    })
                 });   
             }catch(Exception e){
                 throw new Exception("Произошла ошибка при загрузке базовых функций JS!", e);

@@ -10,6 +10,9 @@ Bridge.LogError = __Core.LogError;
 /** @type function():void */
 Bridge.PersistentRender = __Core.PersistentRender;
 
+/** @type {function(string):(string|number[])} */
+Bridge.Atob = __Core.Base64ToBytes;
+
 // ----------------------------------------------------------------------
 
 Bridge.Value = {}

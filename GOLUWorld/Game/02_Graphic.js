@@ -162,3 +162,60 @@ Graphic.DrawRect = function(X, Y, W, H, R, G, B, A = 255){
         }
     }
 }
+
+Graphic.DrawPixels = function(X, Y, W, Data){
+    if(!Data){ return; }
+    
+    const SW = Graphic.ScreenSizeW;
+    const SH = Graphic.ScreenSizeH;
+    const Buf = Graphic.Buffer;
+    
+    const H = (Data.length / W) | 0;
+
+    let X1 = Math.max(0, X) | 0;
+    let Y1 = Math.max(0, Y) | 0;
+    let X2 = Math.min(SW, X + W) | 0;
+    let Y2 = Math.min(SH, Y + H) | 0;
+    
+    if(X1 >= X2 || Y1 >= Y2){ return; }
+    
+    const Effect = Graphic.__Effect;
+    
+    for(let PY = Y1; PY < Y2; PY++){
+        const ScreenRowOffset = PY * SW;
+        const SpriteRowOffset = ((PY - Y) | 0) * W;
+        
+        for(let PX = X1; PX < X2; PX++){
+            const SpriteIndex = SpriteRowOffset + ((PX - X) | 0);
+            const Color = Data[SpriteIndex];
+            
+            const A = (Color >> 24) & 0xFF;
+            
+            if(A === 0){ continue; }
+
+            const R =  Color        & 0xFF;
+            const G = (Color >> 8 ) & 0xFF;
+            const B = (Color >> 16) & 0xFF;
+            
+            const BufIndex = ScreenRowOffset + PX;
+            
+            if(Effect === GRAPHIC_EFFECT_NORMAL && A === 255){
+                Buf[BufIndex] = Color;
+            }else{
+                const DColor = Buf[BufIndex];
+                const DR =  DColor        & 0xFF;
+                const DG = (DColor >> 8 ) & 0xFF;
+                const Db = (DColor >> 16) & 0xFF;
+                
+                Graphic.CalculateColor(DR, DG, DB, R, G, B, A, Effect);
+                
+                Buf[BufIndex] = (255 << 24) | (Graphic.CalculateColorResult.B << 16) | (Graphic.CalculateColorResult.B << 8) | Graphic.CalculateColorResult.R;
+            }
+        }
+    }
+}
+
+Graphic.DrawSprite = function(X, Y, Sprite){
+    if(!Sprite){ return; }
+    Graphic.DrawPixels(X, Y, Sprite.Width, Sprite.Data);
+}
