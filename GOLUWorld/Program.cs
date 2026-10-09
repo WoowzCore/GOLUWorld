@@ -2,6 +2,7 @@
 using System.Text;
 using Jint.Native;
 using Silk.NET.OpenGL;
+using WLI_Input;
 using WLO;
 using WLO.GPU;
 using WLO.Math;
@@ -188,6 +189,30 @@ void main(){
             }catch(Exception e){
                 throw new Exception("Произошла ошибка при запуске игры JS!", e);
             }
+
+            Window.Keyboard.OnKey += (Key, Down) => {
+                if(Down){
+                    if(Key == WLI_Input.Keyboard.Key.Escape){
+                        Window.Mouse.IsLocked = false;
+                    }
+                    
+                    JS.Call("Bridge.Hook.KeyDown", [Key.ToString()]);
+                }else{
+                    JS.Call("Bridge.Hook.KeyUp", [Key.ToString()]);
+                }
+            };
+
+            Window.Mouse.OnButton += (Button, Down) => {
+                if(Down){
+                    if(!Window.Mouse.IsLocked){
+                        Window.Mouse.IsLocked = true;
+                    }
+                    
+                    JS.Call("Bridge.Hook.MouseButtonDown", [Button.ToString()]);
+                }else{
+                    JS.Call("Bridge.Hook.MouseButtonUp", [Button.ToString()]);
+                }
+            };
             
             // ----------------------------------------------------------------------
 
@@ -199,9 +224,18 @@ void main(){
 
                 if(WL.Thread.LimitByDeltaTime(TargetDT, ref DTI__)){
                     DeltaTimeInfo DTI = DTI__!.Value;
+
+                    Vector2I WindowSize = Window.Size;
+                    float Scale = WL.Math.MinF((float)WindowSize.W / ScreenSize.W, (float)WindowSize.H / ScreenSize.H);
+
+                    float OffsetX = (WindowSize.W - ScreenSize.W * Scale) * 0.5f;
+                    float OffsetY = (WindowSize.H - ScreenSize.H * Scale) * 0.5f;
+
+                    float MouseGameX = (Window.Mouse.Position.X - OffsetX) / Scale;
+                    float MouseGameY = (Window.Mouse.Position.Y - OffsetY) / Scale;
                     
                     try{
-                        JS.Call("Bridge.Hook.Cycle", [DTI.DT, DTI.FPS]);
+                        JS.Call("Bridge.Hook.Cycle", [DTI.DT, DTI.FPS, MouseGameX, MouseGameY]);
                     }catch(Exception e){
                         WL.Logger.Error("Произошла ошибка в игровом цикле!", e);
                     }

@@ -4,7 +4,11 @@ var posX = 0;
 const TEST = function(DT) {
     Tick += DT;
 
-    Graphic.Clear(10, 10, 10);
+    if(Input.KeyIsPressed("w")){
+        Graphic.Clear(10, 100, 10);
+    }else{
+        Graphic.Clear(10, 10, 10);   
+    }
 
     for(let i = 0; i < 2000; i++){
         Graphic.SetPixel(Math.floor(Math.random() * 128), Math.floor(Math.random() * 128), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
@@ -60,4 +64,6 @@ const TEST = function(DT) {
     Graphic.Effect(GRAPHIC_EFFECT_INVERT, () => {
         Graphic.DrawRect(intPosX, 80, intPosX + 40, 80 + 40, 255, 255, 255);
     });
+    
+    Graphic.SetPixel(Input.Mouse.Position[0], Input.Mouse.Position[1], 0, 0, 255);
 }

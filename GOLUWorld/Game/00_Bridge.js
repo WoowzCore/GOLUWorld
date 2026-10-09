@@ -37,13 +37,36 @@ Bridge.Hook.Start = function(ThatEXE, ScreenSizeW, ScreenSizeH, FrameBuffer){
     Game.Start();
 }
 
-Bridge.Hook.Cycle = function(DT, FPS){
+Bridge.Hook.Cycle = function(DT, FPS, MouseX, MouseY){
     Game.DT = DT;
     Game.FPS = FPS;
+
+    Input.Mouse.Position[0] = MouseX;
+    Input.Mouse.Position[1] = MouseY;
     
     TEST(DT);
 }
 
 Bridge.Hook.WindowTitle = function(){
     return Game.GenerateWindowTitle();
+}
+
+Bridge.Hook.KeyDown = function(Key){
+    Key = Key.toLowerCase();
+    
+    Input.Keys[Key] = true;
+}
+
+Bridge.Hook.KeyUp = function(Key){
+    Key = Key.toLowerCase();
+    
+    Input.Keys[Key] = false;
+}
+
+Bridge.Hook.MouseButtonDown = function(Button){
+    Input.Mouse.Buttons[Button] = true;
+}
+
+Bridge.Hook.MouseButtonUp = function(Button){
+    Input.Mouse.Buttons[Button] = false;
 }

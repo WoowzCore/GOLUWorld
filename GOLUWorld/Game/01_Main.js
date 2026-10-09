@@ -45,3 +45,19 @@ GMath.CosFast = function(Rad){
 // ----------------------------------------------------------------------
 
 const Input = {}
+
+Input.Keys = {}
+
+Input.KeyIsPressed = function(Key){
+    return Input.Keys[Key] === true;
+}
+
+Input.Mouse = {}
+
+Input.Mouse.Buttons = {}
+
+Input.MouseIsPressed = function(Button){
+    return Input.Mouse.Buttons[Button] === true;
+}
+
+Input.Mouse.Position = [0, 0];
