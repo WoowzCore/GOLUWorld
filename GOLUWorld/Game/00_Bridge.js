@@ -35,6 +35,8 @@ Bridge.Hook.Start = function(ThatEXE, ScreenSizeW, ScreenSizeH, FrameBuffer){
     
     Graphic.Start();
     Game.Start();
+    
+    TEST_START();
 }
 
 Bridge.Hook.Cycle = function(DT, FPS, MouseX, MouseY){
@@ -51,14 +53,26 @@ Bridge.Hook.WindowTitle = function(){
     return Game.GenerateWindowTitle();
 }
 
+const __ConvertKeys = {
+    ["arrowright"]: "right",
+    ["arrowleft"]: "left",
+    ["arrowup"]: "up",
+    ["arrowdown"]: "down"
+}
 Bridge.Hook.KeyDown = function(Key){
     Key = Key.toLowerCase();
+    
+    Key = __ConvertKeys[Key] || Key;
+    
+    Log.Info(Key);
     
     Input.Keys[Key] = true;
 }
 
 Bridge.Hook.KeyUp = function(Key){
     Key = Key.toLowerCase();
+
+    Key = __ConvertKeys[Key] || Key;
     
     Input.Keys[Key] = false;
 }
