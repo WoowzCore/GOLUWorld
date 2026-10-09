@@ -10,14 +10,14 @@ const TEST = function(DT) {
         Graphic.SetPixel(Math.floor(Math.random() * 128), Math.floor(Math.random() * 128), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255));
     }
     
-    let pulse2 = Math.abs(Math.sin(Tick * 0.5)) * 200;
+    let pulse2 = Math.abs(GMath.SinFast(Tick * 0.5)) * 200;
     Graphic.Effect(GRAPHIC_EFFECT_XOR, () => {
         Graphic.DrawSprite(pulse2, pulse2, Sprite_Test)
     });
 
     Graphic.DrawRect(Graphic.BufferW - Sprite_Test.Width, 0, Graphic.BufferW, Sprite_Test.Height, 0, 0, 255)
     Graphic.Clip(Graphic.BufferW - Sprite_Test.Width, 0, Graphic.BufferW, Sprite_Test.Height, () => {
-        Graphic.DrawSprite(Graphic.BufferW - (Math.cos(Tick * 2) * Sprite_Test.Width * 0.5) - Sprite_Test.Width, Math.sin(Tick * 2) * Sprite_Test.Height  * 0.5, Sprite_Test)
+        Graphic.DrawSprite(Graphic.BufferW - (GMath.CosFast(Tick * 2) * Sprite_Test.Width * 0.5) - Sprite_Test.Width, GMath.SinFast(Tick * 2) * Sprite_Test.Height  * 0.5, Sprite_Test)
     })
 
     let targetX = Graphic.BufferW - 64;
@@ -36,7 +36,7 @@ const TEST = function(DT) {
         Graphic.DrawSprite(drawX, drawY, Sprite_Test);
     });
 
-    Graphic.Canvas(64, 64, centerX - 64, centerY, (0.5 + Math.sin(Tick) * 0.5) * 2, (0.5 + Math.cos(Tick * 2) * 0.5) * 2, 0, 0, 0, (W, H) => {
+    Graphic.Canvas(64, 64, centerX - 64, centerY, (0.5 + GMath.SinFast(Tick) * 0.5) * 2, (0.5 + GMath.CosFast(Tick * 2) * 0.5) * 2, 0, 0, 0, (W, H) => {
 
         let drawX = W * 0.5 - Sprite_Test.Width * 0.5;
         let drawY = H * 0.5 - Sprite_Test.Height * 0.5;
@@ -49,11 +49,12 @@ const TEST = function(DT) {
     Graphic.DrawRect(150, 50, 150 + 80, 50 + 80, 255, 0, 0);
     
     Graphic.Effect(GRAPHIC_EFFECT_ADD, () => {
-        let pulse = Math.abs(Math.sin(Tick * 2)) * 100;
+        let pulse = Math.abs(GMath.SinFast(Tick * 2)) * 100;
         Graphic.DrawRect(200, 100, 200 + 30, 100 + 30, pulse, pulse, pulse);
     });
 
-    posX = (posX + DT * 200) % Graphic.BufferW;
+    posX = (posX + DT * 200)
+    if(posX > Graphic.BufferW){ posX = -40; }
     let intPosX = Math.floor(posX);
 
     Graphic.Effect(GRAPHIC_EFFECT_INVERT, () => {

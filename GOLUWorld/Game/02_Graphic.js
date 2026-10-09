@@ -55,13 +55,28 @@ Graphic.Clip = function(X1, Y1, X2, Y2, Function){
     Graphic.__Clip.Y2 = OldClipY2;
 }
 
+Graphic.__CanvasPool = [];
+Graphic.__CanvasStack = [];
+Graphic.__GetPoolBuffer = function(Size){
+    for(let i = 0; i < this.__CanvasPool.length; i++){
+        if(this.__CanvasPool[i].length >= Size){
+            return this.__CanvasPool.splice(i, 1)[0];
+        }
+    }
+    return new Uint32Array(Size);
+}
+
 Graphic.Canvas = function(W, H, X, Y, SW, SH, PX, PY, Rot, Function){
-    const CanvasData = new Uint32Array(W * H);
+    let Size = (W * H) | 0;
+    const CanvasData = Graphic.__GetPoolBuffer(Size);
+    CanvasData.fill(0, 0, Size);
     
-    const OldBuffer = Graphic.Buffer;
-    const OldW = Graphic.BufferW;
-    const OldH = Graphic.BufferH;
-    const OldClip = { ...Graphic.__Clip };
+    Graphic.__CanvasStack.push({
+        Buffer: Graphic.Buffer,
+        W: Graphic.BufferW,
+        H: Graphic.BufferH,
+        Clip: { ...Graphic.__Clip }
+    });
     
     Graphic.Buffer = CanvasData;
     Graphic.BufferW = W;
@@ -70,12 +85,15 @@ Graphic.Canvas = function(W, H, X, Y, SW, SH, PX, PY, Rot, Function){
     
     Function(W, H);
     
-    Graphic.Buffer = OldBuffer;
-    Graphic.BufferW = OldW;
-    Graphic.BufferH = OldH;
-    Graphic.__Clip = OldClip;
+    const Parent = Graphic.__CanvasStack.pop();
+    Graphic.Buffer = Parent.Buffer;
+    Graphic.BufferW = Parent.W;
+    Graphic.BufferH = Parent.H;
+    Graphic.__Clip = Parent.Clip;
     
-    Graphic.DrawPixelsTransformed(CanvasData, W, H, X, Y, SW, SH, PX, PY, Rot);
+    Graphic.DrawPixelsTransformed(CanvasData, W | 0, H | 0, X, Y, SW, SH, PX, PY, Rot);
+    
+    Graphic.__CanvasPool.push(CanvasData);
 }
 
 Graphic.Clear = function(R, G, B){
@@ -275,29 +293,36 @@ Graphic.DrawSprite = function(X, Y, Sprite){
 }
 
 Graphic.DrawPixelsTransformed = function(Data, W, H, X, Y, SW, SH, PX, PY, Rot){
-    const Cos = Math.cos(Rot);
-    const Sin = Math.sin(Rot);
-
-    const PivotX = W * (0.5 + PX * 0.5);
-    const PivotY = H * (0.5 - PY * 0.5);
+    const Sin = GMath.SinFast(Rot);
+    const Cos = GMath.CosFast(Rot);
 
     const MaxDim = Math.sqrt(W*W + H*H) * Math.max(Math.abs(SW), Math.abs(SH));
     let X1 = Math.max(Graphic.__Clip.X1, X - MaxDim) | 0;
     let Y1 = Math.max(Graphic.__Clip.Y1, Y - MaxDim) | 0;
     let X2 = Math.min(Graphic.__Clip.X2, X + MaxDim) | 0;
     let Y2 = Math.min(Graphic.__Clip.Y2, Y + MaxDim) | 0;
+
+    if(X1 >= X2 || Y1 >= Y2){ return; }
+
+    const PivotX = W * (PX + 1) * 0.5;
+    const PivotY = H * (1 - PY) * 0.5;
+    
+    const ISW = 1 / SW;
+    const ISH = 1 / SH;
+
+    const SM1 =  Cos * ISW;
+    const SM2 =  Sin * ISW;
+    const SM3 = -Sin * ISH;
+    const SM4 =  Cos * ISH;
     
     for(let SY = Y1; SY < Y2; SY++){
-        for(let SX = X1; SX < X2; SX++){
-            let DX = (SX - X);
-            let DY = (SY - Y);
-            
-            DX /= SW;
-            DY /= SH;
+        let DX = (X1 - X);
+        let DY = (SY - Y);
 
-            let RX = (DX * Cos + DY * Sin) + PivotX;
-            let RY = (DY * Cos - DX * Sin) + PivotY;
-            
+        let RX = DX * SM1 + DY * SM2 + PivotX;
+        let RY = DX * SM3 + DY * SM4 + PivotY;
+        
+        for(let SX = X1; SX < X2; SX++){
             if(RX >= 0 && RX < W && RY >= 0 && RY < H){
                 const Color = Data[(RY | 0) * W + (RX | 0)];
                 const A = (Color >> 24 & 0xFF);
@@ -306,6 +331,9 @@ Graphic.DrawPixelsTransformed = function(Data, W, H, X, Y, SW, SH, PX, PY, Rot){
                     Graphic.SetPixel(SX, SY, Color & 0xFF, (Color >> 8) & 0xFF, (Color >> 16) & 0xFF, A);
                 }
             }
+            
+            RX += SM1;
+            RY += SM3;
         }
     }
 }
