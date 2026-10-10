@@ -55,9 +55,9 @@ Bridge.Hook.WindowTitle = function(){
 
 const __ConvertKeys = {
     ["arrowright"]: "right",
-    ["arrowleft"]: "left",
-    ["arrowup"]: "up",
-    ["arrowdown"]: "down"
+    ["arrowleft" ]: "left",
+    ["arrowup"   ]: "up",
+    ["arrowdown" ]: "down"
 }
 Bridge.Hook.KeyDown = function(Key){
     Key = Key.toLowerCase();

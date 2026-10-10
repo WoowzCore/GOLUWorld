@@ -1,8 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
-using Jint.Native;
+using Microsoft.ClearScript.JavaScript;
 using Silk.NET.OpenGL;
-using WLI_Input;
 using WLO;
 using WLO.GPU;
 using WLO.Math;
@@ -80,19 +79,19 @@ void main(){
             int? LocModel  = ScreenProgram.GetLocationFromName("Model");
             
             Vector2I ScreenSize = new Vector2I(384, 216);
-            byte[] FrameBuffer = new byte[ScreenSize.W * ScreenSize.H * 4];
+            uint[] FrameBuffer = new uint[ScreenSize.W * ScreenSize.H];
             
             GLTexture2D Screen = GLTexture2D.Create(Render, ScreenSize, InternalFormat.Rgba8, PixelFormat.Rgba, PixelType.UnsignedByte);
             Screen.SetFilter(TextureMinFilter.Nearest);
             
             // ----------------------------------------------------------------------
             
-            WLOLanguage.JS JS_Engine = new WLOLanguage.JS();
-            JS JS = JS_Engine.CreateContext();
-            JS.OnError += WL.Logger.Error;
+            WLOLanguage.ClearScript ClearScript_Engine = new WLOLanguage.ClearScript();
+            ClearScript ClearScript = ClearScript_Engine.CreateContext();
+            ClearScript.OnError += WL.Logger.Error;
 
-            JsArrayBuffer ArrayBuffer = JS.__Engine.Intrinsics.ArrayBuffer.Construct(FrameBuffer);
-            JsTypedArray  UInt32Array = JS.__Engine.Intrinsics.Uint32Array.Construct(ArrayBuffer);
+            dynamic ClearScriptFrameBuffer = ClearScript.__Engine.Evaluate($"new Uint32Array({FrameBuffer.Length})");
+            ClearScript.SetVariable("__Core_FrameBuffer", ClearScriptFrameBuffer);
             
             Dictionary<string, string> Scripts = [];
 
@@ -122,6 +121,10 @@ void main(){
             }
 
             void RenderScreen(){
+                if(ClearScriptFrameBuffer is ITypedArray<uint> Array){
+                    Array.Read(0, (ulong)FrameBuffer.Length, FrameBuffer, 0);
+                }
+                
                 Screen.Update(FrameBuffer);
                         
                 View.Viewport = Window.Size;
@@ -151,7 +154,7 @@ void main(){
             }
             
             try{
-                JS.SetVariable("__Core", new {
+                ClearScript.SetVariable("__Core", new {
                     LogInfo  = new Action<object>(Message => WL.Logger.Info (Message?.ToString() ?? "null")),
                     LogWarn  = new Action<object>(Message => WL.Logger.Warn (Message?.ToString() ?? "null")),
                     LogError = new Action<object>(Message => WL.Logger.Error(Message?.ToString() ?? "null")),
@@ -175,7 +178,7 @@ void main(){
                 foreach(string ScriptPath in Scripts.Keys.OrderBy(K => K).ToList()){
                     try{
                         WL.Logger.Info($"Запуск: {ScriptPath}");
-                        JS.Execute(Scripts[ScriptPath]);
+                        ClearScript.Execute(Scripts[ScriptPath]);
                     }catch(Exception e){
                         throw new Exception($"Произошла ошибка при запуске скрипта: {ScriptPath}", e);
                     }
@@ -185,7 +188,7 @@ void main(){
             }
 
             try{
-                JS.Call("Bridge.Hook.Start", [true, ScreenSize.W, ScreenSize.H, UInt32Array]);
+                ClearScript.Call("Bridge.Hook.Start", true, ScreenSize.W, ScreenSize.H, ClearScriptFrameBuffer);
             }catch(Exception e){
                 throw new Exception("Произошла ошибка при запуске игры JS!", e);
             }
@@ -196,9 +199,9 @@ void main(){
                         Window.Mouse.IsLocked = false;
                     }
                     
-                    JS.Call("Bridge.Hook.KeyDown", [Key.ToString()]);
+                    ClearScript.Call("Bridge.Hook.KeyDown", Key.ToString());
                 }else{
-                    JS.Call("Bridge.Hook.KeyUp", [Key.ToString()]);
+                    ClearScript.Call("Bridge.Hook.KeyUp", Key.ToString());
                 }
             };
 
@@ -208,9 +211,9 @@ void main(){
                         Window.Mouse.IsLocked = true;
                     }
                     
-                    JS.Call("Bridge.Hook.MouseButtonDown", [Button.ToString()]);
+                    ClearScript.Call("Bridge.Hook.MouseButtonDown", Button.ToString());
                 }else{
-                    JS.Call("Bridge.Hook.MouseButtonUp", [Button.ToString()]);
+                    ClearScript.Call("Bridge.Hook.MouseButtonUp", Button.ToString());
                 }
             };
             
@@ -235,12 +238,12 @@ void main(){
                     float MouseGameY = (Window.Mouse.Position.Y - OffsetY) / Scale;
                     
                     try{
-                        JS.Call("Bridge.Hook.Cycle", [DTI.DT, DTI.FPS, MouseGameX, MouseGameY]);
+                        ClearScript.Call("Bridge.Hook.Cycle", DTI.DT, DTI.FPS, MouseGameX, MouseGameY);
                     }catch(Exception e){
                         WL.Logger.Error("Произошла ошибка в игровом цикле!", e);
                     }
 
-                    Window.Title = (JS.Call("Bridge.Hook.WindowTitle") as string)!;
+                    Window.Title = (ClearScript.Call("Bridge.Hook.WindowTitle") as string)!;
                     
                     RenderScreen();
                 }
@@ -248,8 +251,8 @@ void main(){
                 Window.PollEvents2();
             }
             
-            JS.Dispose();
-            JS_Engine.Dispose();
+            ClearScript.Dispose();
+            ClearScript_Engine.Dispose();
             
             Screen?.Destroy();
             ScreenMesh?.Destroy();

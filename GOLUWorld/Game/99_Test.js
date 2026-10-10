@@ -19,7 +19,10 @@ const TEST = function(DT){
     }
     
     Graphic.Clear(200, 200, 200);
-    World.Render(camx, camy);
+    
+    for(let i = 0; i < 10; i++){
+        World.Render(camx + i, camy + i);
+    }
 }
 
 const TEST_START = function(){
