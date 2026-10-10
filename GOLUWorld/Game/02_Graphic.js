@@ -123,11 +123,12 @@ Graphic.GetPixel = function(X, Y){
     ];
 }
 
-Graphic.CalculateColorResult = { R: 0, G: 0, B: 0 }
-Graphic.CalculateColor = function(DR, DG, DB, R, G, B, A, Effect){
+Graphic.CalculateColorResult = { R: 0, G: 0, B: 0, A: 0 }
+Graphic.CalculateColor = function(DR, DG, DB, DA, R, G, B, A, Effect){
     let RR = R;
     let RG = G;
     let RB = B;
+    let RA = A;
     
     if(Effect !== GRAPHIC_EFFECT_NORMAL){
         switch(Effect){
@@ -168,11 +169,13 @@ Graphic.CalculateColor = function(DR, DG, DB, R, G, B, A, Effect){
         RR = ((RR * A) + (DR * IA)) >> 8;
         RG = ((RG * A) + (DG * IA)) >> 8;
         RB = ((RB * A) + (DB * IA)) >> 8;
+        RA = Math.max(DA, A);
     }
     
     Graphic.CalculateColorResult.R = RR;
     Graphic.CalculateColorResult.G = RG;
     Graphic.CalculateColorResult.B = RB;
+    Graphic.CalculateColorResult.A = RA;
 }
 
 Graphic.SetPixel = function(X, Y, R, G, B, A = 255){
@@ -190,10 +193,11 @@ Graphic.SetPixel = function(X, Y, R, G, B, A = 255){
     const DR =  DColor        & 0xFF;
     const DG = (DColor >> 8 ) & 0xFF;
     const DB = (DColor >> 16) & 0xFF;
+    const DA = (DColor >> 24) & 0xFF;
 
-    Graphic.CalculateColor(DR, DG, DB, R, G, B, A, Graphic.__Effect);
+    Graphic.CalculateColor(DR, DG, DB, DA, R, G, B, A, Graphic.__Effect);
 
-    Buf[Index] = (255 << 24) | (Graphic.CalculateColorResult.B << 16) | (Graphic.CalculateColorResult.G << 8) | Graphic.CalculateColorResult.R;
+    Buf[Index] = (Graphic.CalculateColorResult.A << 24) | (Graphic.CalculateColorResult.B << 16) | (Graphic.CalculateColorResult.G << 8) | Graphic.CalculateColorResult.R;
 }
 
 Graphic.DrawRect = function(X1, Y1, X2, Y2, R, G, B, A = 255){
@@ -233,10 +237,11 @@ Graphic.DrawRect = function(X1, Y1, X2, Y2, R, G, B, A = 255){
             const DR =  DColor        & 0xFF;
             const DG = (DColor >> 8 ) & 0xFF;
             const DB = (DColor >> 16) & 0xFF;
+            const DA = (DColor >> 24) & 0xFF;
             
-            Graphic.CalculateColor(DR, DG, DB, R, G, B, A, Effect);
+            Graphic.CalculateColor(DR, DG, DB, DA, R, G, B, A, Effect);
             
-            Buf[Index] = (255 << 24) | (Graphic.CalculateColorResult.B << 16) | (Graphic.CalculateColorResult.G << 8) | Graphic.CalculateColorResult.R;
+            Buf[Index] = (Graphic.CalculateColorResult.A << 24) | (Graphic.CalculateColorResult.B << 16) | (Graphic.CalculateColorResult.G << 8) | Graphic.CalculateColorResult.R;
         }
     }
 }
@@ -286,10 +291,11 @@ Graphic.DrawPixels = function(X, Y, W, Data){
                 const DR =  DColor        & 0xFF;
                 const DG = (DColor >> 8 ) & 0xFF;
                 const DB = (DColor >> 16) & 0xFF;
+                const DA = (DColor >> 24) & 0xFF;
                 
-                Graphic.CalculateColor(DR, DG, DB, R, G, B, A, Effect);
+                Graphic.CalculateColor(DR, DG, DB, DA, R, G, B, A, Effect);
                 
-                Buf[BufIndex] = (255 << 24) | (Graphic.CalculateColorResult.B << 16) | (Graphic.CalculateColorResult.G << 8) | Graphic.CalculateColorResult.R;
+                Buf[BufIndex] = (Graphic.CalculateColorResult.A << 24) | (Graphic.CalculateColorResult.B << 16) | (Graphic.CalculateColorResult.G << 8) | Graphic.CalculateColorResult.R;
             }
         }
     }

@@ -46,7 +46,7 @@ Bridge.Hook.Cycle = function(DT, FPS, MouseX, MouseY){
     Input.Mouse.Position[0] = MouseX;
     Input.Mouse.Position[1] = MouseY;
     
-    Game.GlobalRender(DT);
+    Game.GlobalUpdate(DT);
 }
 
 Bridge.Hook.WindowTitle = function(){
@@ -57,14 +57,18 @@ const __ConvertKeys = {
     ["arrowright"]: "right",
     ["arrowleft" ]: "left",
     ["arrowup"   ]: "up",
-    ["arrowdown" ]: "down"
+    ["arrowdown" ]: "down",
+    ["shiftleft" ]: "shiftl",
 }
 Bridge.Hook.KeyDown = function(Key){
     Key = Key.toLowerCase();
     
     Key = __ConvertKeys[Key] || Key;
     
-    Log.Info(Key);
+    if(Input.Keys[Key] !== true){
+        Log.Info(Key);
+        // press
+    }
     
     Input.Keys[Key] = true;
 }
@@ -73,18 +77,26 @@ Bridge.Hook.KeyUp = function(Key){
     Key = Key.toLowerCase();
 
     Key = __ConvertKeys[Key] || Key;
+
+    if(Input.Keys[Key] !== false){
+        // press
+    }
     
     Input.Keys[Key] = false;
 }
 
 Bridge.Hook.MouseButtonDown = function(Button){
-    Input.Mouse.Buttons[Button] = true;
+    if(Input.Mouse.Buttons[Button] !== true){
+        TEST_MOUSEPRESS(Button, true);
+    }
     
-    TEST_MOUSEPRESS(Button, true);
+    Input.Mouse.Buttons[Button] = true;
 }
 
 Bridge.Hook.MouseButtonUp = function(Button){
+    if(Input.Mouse.Buttons[Button] !== false){
+        TEST_MOUSEPRESS(Button, false);
+    }
+    
     Input.Mouse.Buttons[Button] = false;
-
-    TEST_MOUSEPRESS(Button, false);
 }

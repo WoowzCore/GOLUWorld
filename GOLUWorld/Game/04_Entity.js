@@ -124,6 +124,41 @@ class GameTile{
     }
 }
 
+class GameEntity{
+    /** @type GamePosition */
+    Position = null;
+    /** @type GameRender */
+    Render = null;
+    /** @type GameCollider */
+    Collider = null;
+    
+    constructor(X = 0, Y = 0){
+        this.Position = new GamePosition(X, Y);
+        this.Render   = new GameRender(this.Position);
+        this.Collider = new GameCollider(this.Position, WORLD_TILE_SIZE, WORLD_TILE_SIZE);
+    }
+    
+    DoRender = true;
+    DoUpdate = true;
+    
+    VelocityX = 0;
+    VelocityY = 0;
+    
+    InWorld = false;
+    
+    Update(DT){
+        if(!this.DoUpdate){ return; }
+        
+        this.Position.AddVelocity(this.VelocityX * DT, this.VelocityY * DT);
+    }
+    
+    Draw(CameraX = 0, CameraY = 0){
+        if(!this.DoRender){ return; }
+        
+        this.Render.Render(this.Position.X - CameraX, this.Position.Y - CameraY);
+    }
+}
+
 // ----------------------------------------------------------------------
 
 const Entity = {};

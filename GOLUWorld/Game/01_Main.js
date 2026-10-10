@@ -42,6 +42,30 @@ GMath.CosFast = function(Rad){
     return GMath.__LUT_Cos[i];
 }
 
+GMath.Random = {};
+
+GMath.Random.__Seed = 152637079899;
+
+GMath.Random.SetSeed = function(Seed){
+    GMath.Random.__Seed = (Seed || 152637079899) >>> 0;
+}
+
+GMath.Random.Raw = function(){
+    GMath.Random.__Seed ^= GMath.Random.__Seed << 13;
+    GMath.Random.__Seed ^= GMath.Random.__Seed >> 17;
+    GMath.Random.__Seed ^= GMath.Random.__Seed << 5;
+    return GMath.Random.__Seed >>> 0;
+}
+
+GMath.Random.Float = function(){
+    return GMath.Random.Raw() / 4294967296;
+}
+
+GMath.Random.Int = function(Min, Max){
+    if(Max === undefined){ Max = Min; Min = 0; }
+    return (Min + (GMath.Random.Raw() % (Max - Min + 1))) | 0;
+}
+
 // ----------------------------------------------------------------------
 
 const Input = {}

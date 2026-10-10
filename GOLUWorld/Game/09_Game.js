@@ -20,10 +20,20 @@ Game.GenerateWindowTitle = function(){
 
 // ----------------------------------------------------------------------
 
+Game.GlobalUpdate = function(DT){
+    World.Update(DT);
+    
+    Game.GlobalRender(DT);
+}
+
 Game.GlobalRender = function(DT){
     Graphic.Clear(200, 200, 200);
+
+    Player.Camera.Update(DT);
+
+    World.Render(Player.Camera.RenderX, Player.Camera.RenderY);
     
-    TEST(DT);
+    TEST_CYCLE(DT);
     
     Interface.RenderCursor(Input.Mouse.Position[0], Input.Mouse.Position[1]);
 }
