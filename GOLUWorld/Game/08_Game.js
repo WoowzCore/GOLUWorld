@@ -17,3 +17,13 @@ Game.GenerateWindowTitle = function(){
     
     return `GOLUWorld : ${(Game.IsEXE ? "C#" : "WEB")} Instance : ${__FPSCache.toFixed(1)}`;
 }
+
+// ----------------------------------------------------------------------
+
+Game.GlobalRender = function(DT){
+    Graphic.Clear(200, 200, 200);
+    
+    TEST(DT);
+    
+    Interface.RenderCursor(Input.Mouse.Position[0], Input.Mouse.Position[1]);
+}

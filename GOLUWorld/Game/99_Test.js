@@ -1,6 +1,18 @@
 ﻿let camx = 0;
 let camy = 0;
 
+let startx, starty = 0;
+
+const TEST_MOUSEPRESS = function(Button, Down){
+    if(Down){
+        Log.Info(Button)
+        if(Button === 0){
+            startx = Input.Mouse.Position[0];
+            starty = Input.Mouse.Position[1];
+        }
+    }
+}
+
 const TEST = function(DT){
     const camspeed = 50 * DT;
     
@@ -18,10 +30,10 @@ const TEST = function(DT){
         camy -= camspeed;
     }
     
-    Graphic.Clear(200, 200, 200);
-    
-    for(let i = 0; i < 10; i++){
-        World.Render(camx + i, camy + i);
+    World.Render(camx, camy);
+
+    if(Input.MouseIsPressed(0)){
+        Graphic.DrawRect(startx, starty, Input.Mouse.Position[0], Input.Mouse.Position[1], 255, 0, 0, 127);
     }
 }
 

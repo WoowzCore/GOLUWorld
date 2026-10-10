@@ -2,6 +2,7 @@
 using System.Text;
 using Microsoft.ClearScript.JavaScript;
 using Silk.NET.OpenGL;
+using WLI_Input;
 using WLO;
 using WLO.GPU;
 using WLO.Math;
@@ -30,6 +31,7 @@ public static class Program{
             
             WLO.Window.GLFW Window = new GLFW(new Vector2I(800, 600), "Loading...");
             Window.TODO_UseDarkMode();
+            Window.CursorHided = true;
 
             OpenGL Render = new OpenGL(Window.GetProcAddress, new OpenGL.StartParameters{
                 DebugLogger = false
@@ -196,7 +198,7 @@ void main(){
             Window.Keyboard.OnKey += (Key, Down) => {
                 if(Down){
                     if(Key == WLI_Input.Keyboard.Key.Escape){
-                        Window.Mouse.IsLocked = false;
+                        Window.IsLocked = false;
                     }
                     
                     ClearScript.Call("Bridge.Hook.KeyDown", Key.ToString());
@@ -207,21 +209,24 @@ void main(){
 
             Window.Mouse.OnButton += (Button, Down) => {
                 if(Down){
-                    if(!Window.Mouse.IsLocked){
-                        Window.Mouse.IsLocked = true;
+                    if(!Window.IsLocked){
+                        Window.IsLocked = true;
                     }
                     
-                    ClearScript.Call("Bridge.Hook.MouseButtonDown", Button.ToString());
+                    ClearScript.Call("Bridge.Hook.MouseButtonDown", (int)Button);
                 }else{
-                    ClearScript.Call("Bridge.Hook.MouseButtonUp", Button.ToString());
+                    ClearScript.Call("Bridge.Hook.MouseButtonUp", (int)Button);
                 }
             };
             
             // ----------------------------------------------------------------------
 
             DeltaTimeInfo? DTI__ = null;
-            double TargetDT = DeltaTimeInfo.FPSToDT(30);
+            double TargetDT = DeltaTimeInfo.FPSToDT(60);
 
+            float LogicalMouseX = ScreenSize.W / 2f;
+            float LogicalMouseY = ScreenSize.H / 2f;
+            
             while(!Window.IsClosed){
                 Window.PollEvents();
 
@@ -230,15 +235,22 @@ void main(){
 
                     Vector2I WindowSize = Window.Size;
                     float Scale = WL.Math.MinF((float)WindowSize.W / ScreenSize.W, (float)WindowSize.H / ScreenSize.H);
-
                     float OffsetX = (WindowSize.W - ScreenSize.W * Scale) * 0.5f;
                     float OffsetY = (WindowSize.H - ScreenSize.H * Scale) * 0.5f;
 
-                    float MouseGameX = (Window.Mouse.Position.X - OffsetX) / Scale;
-                    float MouseGameY = (Window.Mouse.Position.Y - OffsetY) / Scale;
+                    if(Window.IsLocked){
+                        LogicalMouseX += Window.Mouse.Delta.X / Scale;
+                        LogicalMouseY += Window.Mouse.Delta.Y / Scale;
+                    }else{
+                        LogicalMouseX = (Window.Mouse.Position.X - OffsetX) / Scale;
+                        LogicalMouseY = (Window.Mouse.Position.Y - OffsetY) / Scale;
+                    }
+
+                    LogicalMouseX = WL.Math.ClampF(LogicalMouseX, 0, ScreenSize.W - 6);
+                    LogicalMouseY = WL.Math.ClampF(LogicalMouseY, 0, ScreenSize.H - 8);
                     
                     try{
-                        ClearScript.Call("Bridge.Hook.Cycle", DTI.DT, DTI.FPS, MouseGameX, MouseGameY);
+                        ClearScript.Call("Bridge.Hook.Cycle", DTI.DT, DTI.FPS, LogicalMouseX, LogicalMouseY);
                     }catch(Exception e){
                         WL.Logger.Error("Произошла ошибка в игровом цикле!", e);
                     }
@@ -246,9 +258,9 @@ void main(){
                     Window.Title = (ClearScript.Call("Bridge.Hook.WindowTitle") as string)!;
                     
                     RenderScreen();
+                    
+                    Window.PollEvents2();
                 }
-                
-                Window.PollEvents2();
             }
             
             ClearScript.Dispose();

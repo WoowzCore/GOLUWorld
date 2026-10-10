@@ -1,50 +1,31 @@
 ﻿class GamePosition{
-    constructor(X = 0, Y = 0, XD = 0, YD = 0){
+    constructor(X = 0, Y = 0){
         this.X = X;
         this.Y = Y;
-        this.XD = XD;
-        this.YD = YD;
     }
     
     X  = 0;
     Y  = 0;
-    XD = 0;
-    YD = 0;
-    
-    GetPositionTile(){
-        return [this.X, this.Y];
-    }
-    
-    GetPositionPixels(){
-        return [this.X * WORLD_TILE_SIZE + this.XD, this.Y * WORLD_TILE_SIZE + this.YD];
-    }
-    
-    SetPositionTile(X, Y){
-        this.X = X;
-        this.Y = Y;
-        this.XD = 0;
-        this.YD = 0;
-    }
-    
-    SetPositionPixels(X, Y){
-        this.X = Math.floor(X / WORLD_TILE_SIZE);
-        this.Y = Math.floor(Y / WORLD_TILE_SIZE);
 
-        this.XD = X - (this.X * WORLD_TILE_SIZE);
-        this.YD = Y - (this.Y * WORLD_TILE_SIZE);
+    get TileX(){ return Math.floor(this.X / WORLD_TILE_SIZE); }
+    get TileY(){ return Math.floor(this.Y / WORLD_TILE_SIZE); }
+
+    get OffsetX(){ return this.X % WORLD_TILE_SIZE; }
+    get OffsetY(){ return this.Y % WORLD_TILE_SIZE; }
+
+    SetPositionTile(TX, TY){
+        if(TX !== undefined){ this.X = TX * WORLD_TILE_SIZE; }
+        if(TY !== undefined){ this.Y = TY * WORLD_TILE_SIZE; }
     }
     
-    Normalize(){
-        while(this.XD >= WORLD_TILE_SIZE){ this.XD -= WORLD_TILE_SIZE; this.X++; }
-        while(this.XD  < 0             ){ this.XD += WORLD_TILE_SIZE; this.X--; }
-        while(this.YD >= WORLD_TILE_SIZE){ this.YD -= WORLD_TILE_SIZE; this.Y++; }
-        while(this.YD  < 0             ){ this.YD += WORLD_TILE_SIZE; this.Y--; }
+    SetPositionPixels(PX, PY){
+        if(PX !== undefined){ this.X = PX; }
+        if(PY !== undefined){ this.Y = PY; }
     }
     
-    AddVelocityPosition(VX, VY){
-        this.XD += VX;
-        this.YD += VY;
-        this.Normalize();
+    AddVelocity(VX, VY){
+        if(VX !== undefined){ this.X += VX; }
+        if(VY !== undefined){ this.Y += VY; }
     }
 }
 
@@ -54,7 +35,7 @@ class GameRender{
     
     constructor(Position, RenderFunction = undefined){
         this.Position = Position;
-        this.RenderFunction = RenderFunction || function(XP, YP, Self){ Graphic.DrawRect(XP, YP, XP + WORLD_TILE_SIZE, YP + WORLD_TILE_SIZE, 255, 0, 255); };
+        this.RenderFunction = RenderFunction || function(X, Y){ Graphic.DrawRect(X, Y, X + WORLD_TILE_SIZE, Y + WORLD_TILE_SIZE, 255, 0, 255); };
     }
     
     /** @type {function(number, number, GameRender)} */
@@ -67,11 +48,10 @@ class GameRender{
         if(X !== undefined && Y !== undefined){
             XP = X; YP = Y;
         }else{
-            const PixelPosition = this.Position.GetPositionPixels();
-            XP = PixelPosition[0];
-            YP = PixelPosition[1];
+            XP = this.Position.X;
+            YP = this.Position.Y;
         }
-        this.RenderFunction(XP, YP, this);
+        this.RenderFunction(Math.floor(XP), Math.floor(YP), this);
     }
 }
 
@@ -106,7 +86,7 @@ class GameTile{
     Collider = null;
     
     constructor(X, Y, Layer, Tile){
-        this.Position = new GamePosition(X, Y);
+        this.Position = new GamePosition(X * WORLD_TILE_SIZE, Y * WORLD_TILE_SIZE);
         this.Render   = new GameRender(this.Position);
         this.Collider = new GameCollider(this.Position);
         
@@ -129,16 +109,16 @@ class GameTile{
         const RenderResource = Def.SpriteOrRender;
         
         if(RenderResource instanceof Sprite){
-            this.Render.RenderFunction = (XP, YP) => {
-                Graphic.DrawSprite(XP, YP, RenderResource);
+            this.Render.RenderFunction = (X, Y) => {
+                Graphic.DrawSprite(X, Y, RenderResource);
             };
         }else if(typeof RenderResource === "function"){
             this.Render.RenderFunction = RenderResource;
         }else if(RenderResource === null){
             this.Render.RenderFunction = null
         }else{
-            this.Render.RenderFunction = (XP, YP) => {
-                Graphic.DrawRect(XP, YP, XP + WORLD_TILE_SIZE, YP + WORLD_TILE_SIZE, 255, 0, 255);
+            this.Render.RenderFunction = (X, Y) => {
+                Graphic.DrawRect(X, Y, X + WORLD_TILE_SIZE, Y + WORLD_TILE_SIZE, 255, 0, 255);
             };
         }
     }

@@ -198,11 +198,16 @@ Graphic.SetPixel = function(X, Y, R, G, B, A = 255){
 
 Graphic.DrawRect = function(X1, Y1, X2, Y2, R, G, B, A = 255){
     if(A === 0){ return; }
+
+    let MinX = Math.floor(Math.min(X1, X2));
+    let MaxX = Math.floor(Math.max(X1, X2));
+    let MinY = Math.floor(Math.min(Y1, Y2));
+    let MaxY = Math.floor(Math.max(Y1, Y2));
     
-    X1 = Math.max(Graphic.__Clip.X1, X1) | 0;
-    Y1 = Math.max(Graphic.__Clip.Y1, Y1) | 0;
-    X2 = Math.min(Graphic.__Clip.X2, X2) | 0;
-    Y2 = Math.min(Graphic.__Clip.Y2, Y2) | 0;
+    X1 = Math.max(Graphic.__Clip.X1, Math.floor(MinX));
+    Y1 = Math.max(Graphic.__Clip.Y1, Math.floor(MinY));
+    X2 = Math.min(Graphic.__Clip.X2, Math.floor(MaxX));
+    Y2 = Math.min(Graphic.__Clip.Y2, Math.floor(MaxY));
     
     if(X1 >= X2 || Y1 >= Y2){ return; }
 
@@ -241,6 +246,9 @@ Graphic.DrawPixels = function(X, Y, W, Data){
     
     const H = (Data.length / W) | 0;
 
+    X = Math.floor(X);
+    Y = Math.floor(Y);
+    
     let X1 = Math.max(Graphic.__Clip.X1, X) | 0;
     let Y1 = Math.max(Graphic.__Clip.Y1, Y) | 0;
     let X2 = Math.min(Graphic.__Clip.X2, X + W) | 0;
@@ -255,7 +263,7 @@ Graphic.DrawPixels = function(X, Y, W, Data){
     
     for(let PY = Y1; PY < Y2; PY++){
         const ScreenRowOffset = PY * SW;
-        const SpriteRowOffset = ((PY - Y) | 0) * W;
+        const SpriteRowOffset = (PY - Y) * W;
         
         for(let PX = X1; PX < X2; PX++){
             const SpriteIndex = SpriteRowOffset + ((PX - X) | 0);

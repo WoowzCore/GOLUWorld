@@ -46,7 +46,7 @@ Bridge.Hook.Cycle = function(DT, FPS, MouseX, MouseY){
     Input.Mouse.Position[0] = MouseX;
     Input.Mouse.Position[1] = MouseY;
     
-    TEST(DT);
+    Game.GlobalRender(DT);
 }
 
 Bridge.Hook.WindowTitle = function(){
@@ -79,8 +79,12 @@ Bridge.Hook.KeyUp = function(Key){
 
 Bridge.Hook.MouseButtonDown = function(Button){
     Input.Mouse.Buttons[Button] = true;
+    
+    TEST_MOUSEPRESS(Button, true);
 }
 
 Bridge.Hook.MouseButtonUp = function(Button){
     Input.Mouse.Buttons[Button] = false;
+
+    TEST_MOUSEPRESS(Button, false);
 }
