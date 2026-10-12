@@ -5,18 +5,15 @@ Player.Camera.X = 0;
 Player.Camera.Y = 0;
 Player.Camera.Zoom = 1;
 
-Player.Camera.RenderX = 0;
-Player.Camera.RenderY = 0;
-
 Player.Camera.Update = function(DT){
-    let TargetX = Math.floor(World.MainPlayer.Position.X) - Graphic.BufferW * 0.5 + WORLD_TILE_SIZE * 0.5;
-    let TargetY = Math.floor(World.MainPlayer.Position.Y) - Graphic.BufferH * 0.5 + WORLD_TILE_SIZE * 0.5;
+    const PlayerCenterX = World.MainPlayer.Position.X + WORLD_TILE_SIZE * 0.5;
+    const PlayerCenterY = World.MainPlayer.Position.Y + WORLD_TILE_SIZE * 0.5;
 
-    Player.Camera.X = TargetX;
-    Player.Camera.Y = TargetY;
+    const MouseOffsetX = Input.Mouse.Position[0] - (Graphic.BufferW * 0.5);
+    const MouseOffsetY = Input.Mouse.Position[1] - (Graphic.BufferH * 0.5);
 
-    Player.Camera.RenderX = Math.floor(TargetX);
-    Player.Camera.RenderY = Math.floor(TargetY);
+    Player.Camera.X = PlayerCenterX + (MouseOffsetX * 0.25) - (Graphic.BufferW * 0.5);
+    Player.Camera.Y = PlayerCenterY + (MouseOffsetY * 0.25) - (Graphic.BufferH * 0.5);
 }
 
 class GamePlayer extends GameEntity{
@@ -127,7 +124,7 @@ class GamePlayer extends GameEntity{
         this.Walk = this.WalkX || this.WalkY;
         
         if(this.VelocityX !== 0 && this.VelocityY !== 0){
-            const DiagScale = 0.7071;
+            const DiagScale = Math.SQRT1_2;
             this.VelocityX *= DiagScale;
             this.VelocityY *= DiagScale;
         }

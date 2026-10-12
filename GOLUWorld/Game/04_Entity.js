@@ -43,14 +43,10 @@ class GameRender{
     
     Render(X, Y){
         if(this.RenderFunction === null){ return; }
+
+        const XP = X !== undefined ? X : this.Position.X;
+        const YP = Y !== undefined ? Y : this.Position.Y;
         
-        let XP, YP;
-        if(X !== undefined && Y !== undefined){
-            XP = X; YP = Y;
-        }else{
-            XP = this.Position.X;
-            YP = this.Position.Y;
-        }
         this.RenderFunction(Math.floor(XP), Math.floor(YP), this);
     }
 }
@@ -103,7 +99,7 @@ class GameTile{
     SetTile(Def){
         if(Def.Layer !== this.Layer){ return; }
         
-        this.Tile = Def;
+        this.Tile    = Def;
         this.IsSolid = Def.IsSolid;
         
         const RenderResource = Def.SpriteOrRender;
@@ -154,7 +150,7 @@ class GameEntity{
     
     Draw(CameraX = 0, CameraY = 0){
         if(!this.DoRender){ return; }
-        
+
         this.Render.Render(this.Position.X - CameraX, this.Position.Y - CameraY);
     }
 }

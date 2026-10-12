@@ -20,8 +20,8 @@ const TEST_START = function(){
     
     for(let y = 0; y < 10; y++) {
         for(let x = 0; x < 20; x++) {
-            World.SetTile(x, y, Tile_Grass);
-            if (x === 0 || y === 0 || x === 19 || y === 9) World.SetTile(x, y, Tile_ErrorWall);
+            World.SetTile(x, y, Tile_Ground);
+            if (x === 0 || y === 0 || x === 19 || y === 9) World.SetTile(x, y, Tile_Bricks);
         }
     }
 }

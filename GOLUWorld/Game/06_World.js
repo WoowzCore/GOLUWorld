@@ -54,7 +54,7 @@ World.GetIndex = function(X, Y){ return (Y * World.Map.SizeW) + X; }
 World.SetTile = function(X, Y, TileID){
     if(X < 0 || X >= World.Map.SizeW || Y < 0 || Y >= World.Map.SizeH){ return; }
     
-    const Def = Entity.Register.Tile.Get(TileID);
+    const Def   = Entity.Register.Tile.Get(TileID);
     const Index = World.GetIndex(X, Y);
     
     World.Map.Tiles[Def.Layer][Index].SetTile(Def);
@@ -97,22 +97,23 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
     const ScreenW = Graphic.BufferW;
     const ScreenH = Graphic.BufferH;
 
-    let X1 = Math.floor(CameraX / WORLD_TILE_SIZE);
-    let Y1 = Math.floor(CameraY / WORLD_TILE_SIZE);
-    let X2 = X1 + Math.ceil(ScreenW / WORLD_TILE_SIZE) + 1;
-    let Y2 = Y1 + Math.ceil(ScreenH / WORLD_TILE_SIZE) + 1;
+    let X1 =  CameraX            / WORLD_TILE_SIZE - 1;
+    let Y1 =  CameraY            / WORLD_TILE_SIZE - 1;
+    let X2 = (CameraX + ScreenW) / WORLD_TILE_SIZE + 1;
+    let Y2 = (CameraY + ScreenH) / WORLD_TILE_SIZE + 1;
 
     X1 = Math.max(0, X1);
     Y1 = Math.max(0, Y1);
     X2 = Math.min(World.Map.SizeW, X2);
     Y2 = Math.min(World.Map.SizeH, Y2);
-    
+
     const RenderLayer = (L) => {
         const LayerData = World.Map.Tiles[L];
         for(let Y = Y1; Y < Y2; Y++){
             const RowOffset = Y * World.Map.SizeW;
             for(let X = X1; X < X2; X++){
                 const Tile = LayerData[RowOffset + X];
+                if (!Tile.Tile || Tile.Tile.Name === "Empty") continue;
 
                 Tile.Render.Render(
                     (X * WORLD_TILE_SIZE) - CameraX,
@@ -122,23 +123,20 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
         }
     };
 
-    for(let L of [TILE_LAYER_FLOOR]){
-        RenderLayer(L);
-    }
-
-    World.Map.Entities.sort((A, B) => A.Position.Y - B.Position.Y);
+    RenderLayer(TILE_LAYER_FLOOR);
     
+    World.Map.Entities.sort((A, B) => A.Position.Y - B.Position.Y);
     for(let Entity of World.Map.Entities){
         if(Entity.Position.X + WORLD_TILE_SIZE > CameraX &&
            Entity.Position.X < CameraX + ScreenW &&
            Entity.Position.Y + WORLD_TILE_SIZE > CameraY &&
            Entity.Position.Y < CameraY + ScreenH
-        ){ // todo
-            Entity.Draw(CameraX, CameraY);   
+        ){
+            Entity.Draw(CameraX, CameraY);
         }
     }
-    
-    for(let L of [TILE_LAYER_WALL, TILE_LAYER_OVERLAY, TILE_LAYER_CEILING]){
-        RenderLayer(L);
-    }
+
+    RenderLayer(TILE_LAYER_WALL);
+    RenderLayer(TILE_LAYER_OVERLAY);
+    RenderLayer(TILE_LAYER_CEILING);
 }

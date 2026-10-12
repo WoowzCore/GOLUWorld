@@ -31,7 +31,7 @@ Game.GlobalRender = function(DT){
 
     Player.Camera.Update(DT);
 
-    World.Render(Player.Camera.RenderX, Player.Camera.RenderY);
+    World.Render(Player.Camera.X, Player.Camera.Y);
     
     TEST_CYCLE(DT);
     

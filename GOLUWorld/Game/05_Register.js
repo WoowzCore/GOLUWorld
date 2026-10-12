@@ -10,11 +10,13 @@ const Sprite_PlayerEyeLeftClose = Resource.Register.Sprite("PlayerEyeLeftClose",
 const Sprite_PlayerEyeRight = Resource.Register.Sprite("PlayerEyeRight", "16|24|乐一姿崀巿巿嗿崄一一一一一一一一一一一一一一伐一一一一伢倐一一一伣儲一一一乂休倀一一丁刢倐一一一丑伐一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
 const Sprite_PlayerEyeRightClose = Resource.Register.Sprite("PlayerEyeRightClose", "16|24|乐一姿巿巰仿嗿崄一一一一一一一一一一一一一一伐一一一一伢倐一一一伱倓一一一乄儳刀一一丁剄刐一一一丑伐一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
 const Sprite_PlayerNose = Resource.Register.Sprite("PlayerNose", "16|24|乐一凿嶿巿巿嗿崄一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一丁一一一一丂伀一一一一倱一一一一乁传一一一丂倠一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
+const Sprite_PlayerShadow = Resource.Register.Sprite("PlayerShadow", "16|24|丠一万崁嗿峿巿巿嗿尿巀");
 
 const Sprite_Ground = Resource.Register.Sprite("Ground", "16|7|丷塓侃崿出卼几倔墠墢堢亡努堨堊墪嘪堪墒亨努嚪堨堖墊墨亪倊墊倊堊傠傪噚嚤墢侪倚亨傆墢墢傠嚠塪墨墪嘪墢墨");
 const Sprite_Grass = Resource.Register.Sprite("Grass", "16|7|丵佺亘労克埠啠倅乕劕伅丁垐劔厐圄劅噄乀丁剕乀乐侀且乑噀刄刉佂刐亅圠丅呔圐伆偉協乂十吒匥卆佡佖乥向別卄");
 
-const Sprite_PlayerShadow = Resource.Register.Sprite("PlayerShadow", "16|24|丠一万崁嗿峿巿巿嗿尿巀");
+const Sprite_Concrete = Resource.Register.Sprite("Concrete", "16|16|乐丿嗿嶿乀伢儳兄剄倐伤刳剂倢倢伤兂倢倢偄刡偄剂偄儳刡丁休休休伐丁倢倢倢倢伀伤刳剄剄倐丒剄刢倢倡丁偄剄剃剄企伢偄剄剂倡伢倢倢倢偂伒偄剄剂倢們偄剄剄剄倡伢倢倢倢倢伒値倢倢倢倐伢倢倢倒倐");
+const Sprite_Bricks = Resource.Register.Sprite("Bricks", "16|7|乫嶿姷嵿嗿巿巳崿凼婤務吮你刀丑休一一両儳儳儳儳儰丱休伐一丁倀一丂倢倢値剑剔剕匔剄单兕单卓单匳儱儳儳儓儴剄卅佔剅剑剕单匵单单儓儳儳伳儳儴剑剅卄匔剄单兕单卓卅匳儱儳儳儓儴剄卅佄剄十協单匴協单儓儳儳伳儳儰");
 
 // ----------------------------------------------------------------------
 
@@ -30,3 +32,6 @@ const Tile_ErrorCeiling = Entity.Register.Tile.Register("Error", TILE_LAYER_CEIL
 
 const Tile_Ground = Entity.Register.Tile.Register("Ground", TILE_LAYER_FLOOR, Sprite_Ground);
 const Tile_Grass = Entity.Register.Tile.Register("Grass", TILE_LAYER_FLOOR, Sprite_Grass);
+
+const Tile_Concrete = Entity.Register.Tile.Register("Concrete", TILE_LAYER_WALL, Sprite_Concrete);
+const Tile_Bricks = Entity.Register.Tile.Register("Bricks", TILE_LAYER_WALL, Sprite_Bricks);
