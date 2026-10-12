@@ -17,8 +17,12 @@ Graphic.BufferW = 0;
 Graphic.BufferH = 0;
 Graphic.Div255 = 1 / 255;
 
+Graphic.ScreenExtend = 16;
+
 /** @type Uint16Array */
 Graphic.HeightBuffer = null;
+Graphic.HeightW = 0;
+Graphic.HeightH = 0;
 
 /** @type Uint8Array */
 Graphic.ShadowBuffer = null;
@@ -28,8 +32,10 @@ Graphic.Start = function(){
     Graphic.BufferSize = Bridge.Value.ScreenSize;
     Graphic.BufferW    = Graphic.BufferSize[0];
     Graphic.BufferH    = Graphic.BufferSize[1];
-    
-    Graphic.HeightBuffer = new Uint16Array(Graphic.BufferW * Graphic.BufferH);
+
+    Graphic.HeightW = Graphic.BufferW + Graphic.ScreenExtend * 2;
+    Graphic.HeightH = Graphic.BufferH + Graphic.ScreenExtend * 2;
+    Graphic.HeightBuffer = new Uint16Array(Graphic.HeightW * Graphic.HeightH);
     Graphic.ShadowBuffer = new Uint8Array(Graphic.BufferW * Graphic.BufferH);
 
     Graphic.__Clip.X1 = 0;
@@ -449,9 +455,17 @@ Graphic.ClearHeight = function(Height){
 
 Graphic.SetMaxHeight = function(X, Y, Height){
     if(Height === 0){ return; }
-    if(!Graphic.InBuffer(X, Y)){ return; }
 
-    const Index = (Y | 0) * Graphic.BufferW + (X | 0);
+    const Ext = Graphic.ScreenExtend;
+    const W = Graphic.HeightW;
+    const H = Graphic.HeightH;
+
+    const IX = (X | 0) + Ext;
+    const IY = (Y | 0) + Ext;
+
+    if(IX < 0 || IY < 0 || IX >= W || IY >= H){ return; }
+
+    const Index = IY * W + IX;
     const Buf = Graphic.HeightBuffer;
     if(Height > Buf[Index]){ Buf[Index] = Height; }
 }
@@ -459,18 +473,21 @@ Graphic.SetMaxHeight = function(X, Y, Height){
 Graphic.FillHeight = function(X1, Y1, X2, Y2, Height){
     if(Height === 0){ return; }
 
-    X1 = Math.max(0, Math.floor(X1)) | 0;
-    Y1 = Math.max(0, Math.floor(Y1)) | 0;
-    X2 = Math.min(Graphic.BufferW, Math.floor(X2)) | 0;
-    Y2 = Math.min(Graphic.BufferH, Math.floor(Y2)) | 0;
+    const Ext = Graphic.ScreenExtend;
+    const W = Graphic.HeightW;
+    const H = Graphic.HeightH;
+
+    X1 = Math.max(0, Math.floor(X1) + Ext);
+    Y1 = Math.max(0, Math.floor(Y1) + Ext);
+    X2 = Math.min(W, Math.floor(X2) + Ext);
+    Y2 = Math.min(H, Math.floor(Y2) + Ext);
 
     if(X1 >= X2 || Y1 >= Y2){ return; }
 
     const Buf = Graphic.HeightBuffer;
-    const SW = Graphic.BufferW;
 
     for(let PY = Y1; PY < Y2; PY++){
-        const Row = PY * SW;
+        const Row = PY * W;
         for(let PX = X1; PX < X2; PX++){
             const Index = Row + PX;
             if(Height > Buf[Index]){ Buf[Index] = Height; }
@@ -479,41 +496,47 @@ Graphic.FillHeight = function(X1, Y1, X2, Y2, Height){
 }
 
 Graphic.GetHeight = function(X, Y){
-    if(!Graphic.InBuffer(X, Y)){ return 0; }
-    return Graphic.HeightBuffer[(Y | 0) * Graphic.BufferW + (X | 0)];
+    const Ext = Graphic.ScreenExtend;
+    const IX = (X | 0) + Ext;
+    const IY = (Y | 0) + Ext;
+    if(IX < 0 || IY < 0 || IX >= Graphic.HeightW || IY >= Graphic.HeightH){ return 0; }
+    return Graphic.HeightBuffer[IY * Graphic.HeightW + IX];
 }
 
 Graphic.FillHeightSprite = function(X, Y, Sprite, Height, Threshold = 1){
     if(!Sprite || Height === 0){ return; }
 
     const Data = Sprite.Data;
-    const W = Sprite.Width;
-    const H = Sprite.Height;
+    const SW = Sprite.Width;
+    const SH = Sprite.Height;
+
+    const Ext = Graphic.ScreenExtend;
+    const BufW = Graphic.HeightW;
+    const BufH = Graphic.HeightH;
 
     X = Math.floor(X);
     Y = Math.floor(Y);
 
-    let X1 = Math.max(0, X) | 0;
-    let Y1 = Math.max(0, Y) | 0;
-    let X2 = Math.min(Graphic.BufferW, X + W) | 0;
-    let Y2 = Math.min(Graphic.BufferH, Y + H) | 0;
+    let X1 = Math.max(0, X + Ext);
+    let Y1 = Math.max(0, Y + Ext);
+    let X2 = Math.min(BufW, X + Ext + SW);
+    let Y2 = Math.min(BufH, Y + Ext + SH);
 
     if(X1 >= X2 || Y1 >= Y2){ return; }
 
     const IsU8 = Graphic.IsByteData(Data);
     const HBuf = Graphic.HeightBuffer;
-    const SW = Graphic.BufferW;
 
     for(let PY = Y1; PY < Y2; PY++){
-        const ScreenRow = PY * SW;
-        const SpriteRow = (PY - Y) * W;
+        const BufRow = PY * BufW;
+        const SpriteRow = (PY - Ext - Y) * SW;
 
         for(let PX = X1; PX < X2; PX++){
-            const SIndex = SpriteRow + ((PX - X) | 0);
+            const SIndex = SpriteRow + (PX - Ext - X);
             const A = Graphic.DataAlphaGet(Data, SIndex, IsU8);
             if(A < Threshold){ continue; }
 
-            const BufIndex = ScreenRow + PX;
+            const BufIndex = BufRow + PX;
             if(Height > HBuf[BufIndex]){ HBuf[BufIndex] = Height; }
         }
     }
@@ -523,7 +546,7 @@ Graphic.FillHeightSprite = function(X, Y, Sprite, Height, Threshold = 1){
 
 Graphic.GenerateShadows = function(
     Buffer, BufferW, BufferH,
-    HeightBuffer,
+    HeightBuffer, HeightExtW, HeightExtH, Ext,
     ShadowBuffer,
     SunAngle = 45,
     SunHeight = 45,
@@ -546,50 +569,67 @@ Graphic.GenerateShadows = function(
     const HeightRad = Math.max(1, Math.min(89, SunHeight)) * Math.PI / 180;
     const LengthScale = 1 / Math.tan(HeightRad);
 
-    for(let Y = 0; Y < H; Y++){
-        const Row = Y * W;
-        for(let X = 0; X < W; X++){
-            const HVal = HBuf[Row + X];
+    const MAX_SHADOW = 64;
+
+    for(let EY = 0; EY < HeightExtH; EY++){
+        const ExtRow = EY * HeightExtW;
+        const SrcScreenY = EY - Ext;
+
+        for(let EX = 0; EX < HeightExtW; EX++){
+            const HVal = HBuf[ExtRow + EX];
             if(HVal <= 0){ continue; }
 
-            const ShadowLength = ((HVal / 16) * LengthScale) | 0;
+            const SrcScreenX = EX - Ext;
+
+            let ShadowLength = ((HVal * LengthScale) / 16) | 0;
+            if(ShadowLength > MAX_SHADOW){ ShadowLength = MAX_SHADOW; }
             if(ShadowLength <= 0){ continue; }
 
+            const InvLength = 1 / ShadowLength;
+
+            let FX = SrcScreenX + ShadowDX;
+            let FY = SrcScreenY + ShadowDY;
+
             for(let S = 1; S <= ShadowLength; S++){
-                const SX = X + Math.round(ShadowDX * S);
-                const SY = Y + Math.round(ShadowDY * S);
+                const SX = FX | 0;
+                const SY = FY | 0;
+                FX += ShadowDX;
+                FY += ShadowDY;
 
-                if(SX < 0 || SY < 0 || SX >= W || SY >= H){ break; }
+                if(ShadowDX > 0 && SX >= W){ break; }
+                if(ShadowDX < 0 && SX < 0){ break; }
+                if(ShadowDX === 0 && (SX < 0 || SX >= W)){ break; }
+                if(ShadowDY > 0 && SY >= H){ break; }
+                if(ShadowDY < 0 && SY < 0){ break; }
+                if(ShadowDY === 0 && (SY < 0 || SY >= H)){ break; }
 
-                const SIndex = SY * W + SX;
-                const TargetH = HBuf[SIndex];
+                if(SX < 0 || SY < 0 || SX >= W || SY >= H){ continue; }
 
-                const ShadowHeight = HVal * (1 - S / ShadowLength);
+                const TargetH = HBuf[(SY + Ext) * HeightExtW + (SX + Ext)];
+
+                const ShadowHeight = HVal * (1 - S * InvLength);
                 if(ShadowHeight <= TargetH){ continue; }
 
-                const Coverage = TargetH === 0
-                    ? 1
-                    : Math.max(0, (ShadowHeight - TargetH) / ShadowHeight);
+                const SIndex = SY * W + SX;
 
-                const T = (S - 1) / ShadowLength;
                 let Falloff;
                 if(Softness <= 0){
                     Falloff = 1;
                 }else{
-                    Falloff = 1 - T * Softness;
+                    Falloff = 1 - (S - 1) * InvLength * Softness;
                     if(Falloff < 0){ Falloff = 0; }
                 }
 
-                let Amount = (Strength * Falloff * Coverage) | 0;
+                let Amount = (Strength * Falloff) | 0;
                 if(Amount > 255){ Amount = 255; }
-                if(Amount < 0){ Amount = 0; }
 
                 if(Amount > SBuf[SIndex]){ SBuf[SIndex] = Amount; }
             }
         }
     }
 
-    for(let I = 0; I < W * H; I++){
+    const Inv255 = 1 / 255;
+    for(let I = 0, N = W * H; I < N; I++){
         const Amount = SBuf[I];
         if(Amount <= 0){ continue; }
 
@@ -600,9 +640,9 @@ Graphic.GenerateShadows = function(
         const DA = (Color >> 24) & 0xFF;
 
         const IA = 255 - Amount;
-        const R = ((ShadowR * Amount) + (DR * IA)) / 255 | 0;
-        const G = ((ShadowG * Amount) + (DG * IA)) / 255 | 0;
-        const B = ((ShadowB * Amount) + (DB * IA)) / 255 | 0;
+        const R = ((ShadowR * Amount) + (DR * IA)) * Inv255 | 0;
+        const G = ((ShadowG * Amount) + (DG * IA)) * Inv255 | 0;
+        const B = ((ShadowB * Amount) + (DB * IA)) * Inv255 | 0;
 
         Buf[I] = (DA << 24) | (B << 16) | (G << 8) | R;
     }

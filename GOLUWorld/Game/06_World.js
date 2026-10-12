@@ -99,11 +99,13 @@ World.Update = function(DT){
 World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
     const ScreenW = Graphic.BufferW;
     const ScreenH = Graphic.BufferH;
+    const Ext = Graphic.ScreenExtend;
+    const ExtTile = Ext / WORLD_TILE_SIZE;
 
-    let X1 = Math.floor(CameraX / WORLD_TILE_SIZE) - 1;
-    let Y1 = Math.floor(CameraY / WORLD_TILE_SIZE) - 1;
-    let X2 = Math.ceil((CameraX + ScreenW) / WORLD_TILE_SIZE) + 1;
-    let Y2 = Math.ceil((CameraY + ScreenH) / WORLD_TILE_SIZE) + 1;
+    let X1 = Math.floor(CameraX / WORLD_TILE_SIZE) - 1 - ExtTile;
+    let Y1 = Math.floor(CameraY / WORLD_TILE_SIZE) - 1 - ExtTile;
+    let X2 = Math.ceil((CameraX + ScreenW) / WORLD_TILE_SIZE) + 1 + ExtTile;
+    let Y2 = Math.ceil((CameraY + ScreenH) / WORLD_TILE_SIZE) + 1 + ExtTile;
 
     X1 = Math.max(0, X1);
     Y1 = Math.max(0, Y1);
@@ -116,11 +118,21 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
             const RowOffset = Y * World.Map.SizeW;
             for(let X = X1; X < X2; X++){
                 const Tile = LayerData[RowOffset + X];
-                if (!Tile.Tile || Tile.Tile.Name === "Empty") continue;
+                if(!Tile.Tile || Tile.Tile.Name === "Empty"){ continue; }
 
+                const ScreenX = (X * WORLD_TILE_SIZE) - CameraX;
+                const ScreenY = (Y * WORLD_TILE_SIZE) - CameraY;
+
+                if(ScreenX + WORLD_TILE_SIZE > 0 && ScreenX < ScreenW &&
+                   ScreenY + WORLD_TILE_SIZE > 0 && ScreenY < ScreenH)
+                {
+                    Tile.Render.Render(ScreenX, ScreenY, false);
+                }
+                
                 Tile.Render.Render(
-                    (X * WORLD_TILE_SIZE) - CameraX,
-                    (Y * WORLD_TILE_SIZE) - CameraY
+                    ScreenX,
+                    ScreenY,
+                    true
                 );
             }
         }
@@ -145,7 +157,7 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
 
     Graphic.GenerateShadows(
         Graphic.Buffer, Graphic.BufferW, Graphic.BufferH,
-        Graphic.HeightBuffer,
+        Graphic.HeightBuffer, Graphic.HeightW, Graphic.HeightH, Graphic.ScreenExtend,
         Graphic.ShadowBuffer,
         World.TEST_SUN,
         20,

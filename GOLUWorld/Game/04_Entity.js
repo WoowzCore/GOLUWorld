@@ -33,21 +33,33 @@ class GameRender{
     /** @type GamePosition */
     Position = null;
     
-    constructor(Position, RenderFunction = undefined){
+    constructor(Position, RenderFunction = undefined, HeightFunction = undefined){
         this.Position = Position;
         this.RenderFunction = RenderFunction || function(X, Y){ Graphic.DrawRect(X, Y, X + WORLD_TILE_SIZE, Y + WORLD_TILE_SIZE, 255, 0, 255); };
+        this.HeightFunction = HeightFunction || null;
     }
     
     /** @type {function(number, number, GameRender)} */
     RenderFunction = null;
     
-    Render(X, Y){
-        if(this.RenderFunction === null){ return; }
+    /** @type {function(number, number, GameRender)} */
+    HeightFunction = null;
+    
+    RenderSelected(X, Y, Function){
+        if(Function === null){ return; }
 
-        const XP = X !== undefined ? X : this.Position.X;
-        const YP = Y !== undefined ? Y : this.Position.Y;
+        Function(X, Y, this);
+    }
+    
+    Render(X, Y, Height = false){
+        const XP = Math.floor(X !== undefined ? X : this.Position.X);
+        const YP = Math.floor(Y !== undefined ? Y : this.Position.Y);
         
-        this.RenderFunction(Math.floor(XP), Math.floor(YP), this);
+        if(Height){
+            this.RenderSelected(XP, YP, this.HeightFunction);
+        }else{
+            this.RenderSelected(XP, YP, this.RenderFunction);
+        }
     }
 }
 
@@ -107,6 +119,8 @@ class GameTile{
         if(RenderResource instanceof Sprite){
             this.Render.RenderFunction = (X, Y) => {
                 Graphic.DrawSprite(X, Y, RenderResource);
+            };
+            this.Render.HeightFunction = (X, Y) => {
                 Graphic.FillHeight(X, Y, X + WORLD_TILE_SIZE, Y + WORLD_TILE_SIZE, this.Tile.Height);
             };
         }else if(typeof RenderResource === "function"){
@@ -154,7 +168,8 @@ class GameEntity{
 
         const SnappedX = Math.round(this.Position.X);
         const SnappedY = Math.round(this.Position.Y);
-        this.Render.Render(SnappedX - CameraX, SnappedY - CameraY);
+        this.Render.Render(SnappedX - CameraX, SnappedY - CameraY, false);
+        this.Render.Render(SnappedX - CameraX, SnappedY - CameraY, true );
     }
 }
 

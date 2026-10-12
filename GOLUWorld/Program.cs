@@ -226,13 +226,13 @@ void main(){
 
             float LogicalMouseX = ScreenSize.W / 2f;
             float LogicalMouseY = ScreenSize.H / 2f;
-            
+
             while(!Window.IsClosed){
                 Window.PollEvents();
 
                 if(WL.Thread.LimitByDeltaTime(TargetDT, ref DTI__)){
                     DeltaTimeInfo DTI = DTI__!.Value;
-
+                    
                     Vector2I WindowSize = Window.Size;
                     float Scale = WL.Math.MinF((float)WindowSize.W / ScreenSize.W, (float)WindowSize.H / ScreenSize.H);
                     float OffsetX = (WindowSize.W - ScreenSize.W * Scale) * 0.5f;
