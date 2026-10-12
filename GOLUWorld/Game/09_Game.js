@@ -27,7 +27,8 @@ Game.GlobalUpdate = function(DT){
 }
 
 Game.GlobalRender = function(DT){
-    Graphic.Clear(200, 200, 200);
+    Graphic.Clear(160, 160, 160);
+    Graphic.ClearHeight(0);
 
     Player.Camera.Update(DT);
 

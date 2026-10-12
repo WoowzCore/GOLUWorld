@@ -87,7 +87,10 @@ World.Start = function(MapSizeW = 256, MapSizeH = 256){
     World.AddEntity(World.MainPlayer);
 }
 
+World.TEST_SUN = 45;
 World.Update = function(DT){
+    World.TEST_SUN = (World.TEST_SUN + 5 * DT) % 360;
+    
     for(let i = 0; i < World.Map.Entities.length; i++){
         World.Map.Entities[i].Update(DT);
     }
@@ -97,10 +100,10 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
     const ScreenW = Graphic.BufferW;
     const ScreenH = Graphic.BufferH;
 
-    let X1 =  CameraX            / WORLD_TILE_SIZE - 1;
-    let Y1 =  CameraY            / WORLD_TILE_SIZE - 1;
-    let X2 = (CameraX + ScreenW) / WORLD_TILE_SIZE + 1;
-    let Y2 = (CameraY + ScreenH) / WORLD_TILE_SIZE + 1;
+    let X1 = Math.floor(CameraX / WORLD_TILE_SIZE) - 1;
+    let Y1 = Math.floor(CameraY / WORLD_TILE_SIZE) - 1;
+    let X2 = Math.ceil((CameraX + ScreenW) / WORLD_TILE_SIZE) + 1;
+    let Y2 = Math.ceil((CameraY + ScreenH) / WORLD_TILE_SIZE) + 1;
 
     X1 = Math.max(0, X1);
     Y1 = Math.max(0, Y1);
@@ -139,4 +142,15 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
     RenderLayer(TILE_LAYER_WALL);
     RenderLayer(TILE_LAYER_OVERLAY);
     RenderLayer(TILE_LAYER_CEILING);
+
+    Graphic.GenerateShadows(
+        Graphic.Buffer, Graphic.BufferW, Graphic.BufferH,
+        Graphic.HeightBuffer,
+        Graphic.ShadowBuffer,
+        World.TEST_SUN,
+        20,
+        180,
+        0.75,
+        0, 0, 0
+    );
 }

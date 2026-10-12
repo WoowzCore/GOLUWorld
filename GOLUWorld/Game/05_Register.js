@@ -1,22 +1,21 @@
-﻿const Sprite_Cursor = Resource.Register.Sprite("Cursor", "6|24|丰仿一一儠倅匑匔匕伕刔丒圊匀");
+﻿const Sprite_Cursor = Resource.Register.Sprite("Cursor", "6|24|丰仿一一凰倅匑匔匕伕刔丒圊匀");
 const Sprite_CursorBG = Resource.Register.Sprite("CursorBG", "6|24|丰一巿嶿巰倀丐丘並严嘨丠一一");
 
-const Sprite_Error = Resource.Register.Sprite("Error", "16|5|丰一巰仿巰倀丅協何匀両单一倔丅匂佅匀嘡剕丈倔卐亂佅匀嘤伀墢噁上堨刐亪傄伀墢噀墠丨刀亪墄一墪嘪墠一");
+const Sprite_Error = Resource.Register.Sprite("Error", "16|7|乍屼唈倮偃崉乀一一倀一丁何单卡坕卖吔单卒丄乐你巏嬿名勓兎什娳仠巏嬿名勓兎什嬳勡川啵尕单卖侕单呡剕单偪墪墫");
 
-const Sprite_PlayerBody = Resource.Register.Sprite("PlayerBody", "16|24|习一凿嵿巻巿巿崀巰刀丒倢倢伐一专剃儴儲伀专剄剃剃儡专儳剄剄刳偒元兄剄剄儥偄剄兄剄刳匤剄剄剃元兒剄剄剄儳儵偄刳剄剃倣匣剄刴剄刳兑儴剄剄刳儵伳儴剄儳儲匒儳儳儳儲佐伣儳儢倢佐丁倳倡休佐一乕单单卐一");
-const Sprite_PlayerMouth = Resource.Register.Sprite("PlayerMouth", "16|24|习一凿嶿巷巿丏巿巰刀一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一丐一一一一丁一一一一倱一一一一丁儀丑儢丂們儀一儔剄刓倀一一偕卒倀一一丳儳倀一一一一一一一一一一一一");
-const Sprite_PlayerEyeLeft = Resource.Register.Sprite("PlayerEyeLeft", "16|24|乐一姿崀巿巿嗿崄一一一一一一一一一一一一一一一一一休一一一一伢們一一一伣儲刀一一丒休倐一一一伢倐一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
-const Sprite_PlayerEyeLeftClose = Resource.Register.Sprite("PlayerEyeLeftClose", "16|24|乐一姿巿巰仿嗿崄一一一一一一一一一一一一一一一一一休一一一一伢們一一一伱倓刀一一且儳刐一一一佄刐一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
-const Sprite_PlayerEyeRight = Resource.Register.Sprite("PlayerEyeRight", "16|24|乐一姿崀巿巿嗿崄一一一一一一一一一一一一一一伐一一一一伢倐一一一伣儲一一一乂休倀一一丁刢倐一一一丑伐一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
-const Sprite_PlayerEyeRightClose = Resource.Register.Sprite("PlayerEyeRightClose", "16|24|乐一姿巿巰仿嗿崄一一一一一一一一一一一一一一伐一一一一伢倐一一一伱倓一一一乄儳刀一一丁剄刐一一一丑伐一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
-const Sprite_PlayerNose = Resource.Register.Sprite("PlayerNose", "16|24|乐一凿嶿巿巿嗿崄一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一丁一一一一丂伀一一一一倱一一一一乁传一一一丂倠一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
-const Sprite_PlayerShadow = Resource.Register.Sprite("PlayerShadow", "16|24|丠一万崁嗿峿巿巿嗿尿巀");
+const Sprite_PlayerBody = Resource.Register.Sprite("PlayerBody", "16|15|乐一一乒匥僿堊亠巿峿巿崀一仿乀丁伒休們一丁倳儡倲倐丁伒儳儳儲企倣儳儳儲伔伣儳們伒們刓儳們伣儳偁儡伒倳儳儤伡倣儳儳儳伒倣儳儳儲倒儳儳儲倢佁伳儳儲休休划儳儢伒儳允倢儳儳伒値丑伢儳倡伔一刡伢們伔一丄剄休剄一");
+const Sprite_PlayerMouth = Resource.Register.Sprite("PlayerMouth", "16|15|乐一一乒匥僿堊亠巰一丏巾巿巿乀一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一传一一一估両倢倢倢伲一倳儳儳儲一一偄剄倠一一丂倢倀一一一一一一一一一一一一");
+const Sprite_PlayerEyeLeft = Resource.Register.Sprite("PlayerEyeLeft", "16|15|乐一一亠堊仿匥偒巰一丏巾巿巿乀一一一一一一一一一一一丑休一一一丣儲伐一一专剄儡一一丁兄刲一一一丣儲一一一丁休伀一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
+const Sprite_PlayerEyeLeftClose = Resource.Register.Sprite("PlayerEyeLeftClose", "16|15|乐一一亠堊仿匥偒巿峿巿崀一仿乀一一一一一一一一一一一丑休一一一両儒伐一一且伱刡一一丁剄剂一一一両伒一一一丁休伀一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
+const Sprite_PlayerEyeRight = Resource.Register.Sprite("PlayerEyeRight", "16|15|乐一一亠堊仿匥偒巰一丏巾巿巿乀一一一一一一一一丁伀一一一丣儲一一一专剄儀一一丂兄刱一一一倣儲伀一一一休伀一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
+const Sprite_PlayerEyeRightClose = Resource.Register.Sprite("PlayerEyeRightClose", "16|15|乐一一亠堊仿匥偒巿峿巿崀一仿乀一一一一一一一一丁伀一一一両儒一一一且伱刀一一丂剄剁一一一倡伒伀一一一休伀一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
+const Sprite_PlayerNose = Resource.Register.Sprite("PlayerNose", "16|15|乐一一一一仿堊亠巵偒匯巾巿巿乀一一一一一一一一一一一一一一一一一一一一一一一一一一一一一伀一一一一倰一一一一丣倀一一一两刐一一一一們一一一一丳儰一一一一一一一一一一一一一一一一一一一一一一一一一一一一");
 
-const Sprite_Ground = Resource.Register.Sprite("Ground", "16|7|丷塓侃崿出卼几倔墠墢堢亡努堨堊墪嘪堪墒亨努嚪堨堖墊墨亪倊墊倊堊傠傪噚嚤墢侪倚亨傆墢墢傠嚠塪墨墪嘪墢墨");
-const Sprite_Grass = Resource.Register.Sprite("Grass", "16|7|丵佺亘労克埠啠倅乕劕伅丁垐劔厐圄劅噄乀丁剕乀乐侀且乑噀刄刉佂刐亅圠丅呔圐伆偉協乂十吒匥卆佡佖乥向別卄");
+const Sprite_Ground = Resource.Register.Sprite("Ground", "16|7|丮囐墬嚑几伃丸劄劄嘰儀娌丠倁丐企丰冄噄噈儃丌什倂丐企丐");
+const Sprite_Grass = Resource.Register.Sprite("Grass", "16|7|丨侺傃佣一伀丈嘀剈嘢剁伢丁伀一一一一丂丂伢侉伄劈丄刀一");
 
-const Sprite_Concrete = Resource.Register.Sprite("Concrete", "16|16|乐丿嗿嶿乀伢儳兄剄倐伤刳剂倢倢伤兂倢倢偄刡偄剂偄儳刡丁休休休伐丁倢倢倢倢伀伤刳剄剄倐丒剄刢倢倡丁偄剄剃剄企伢偄剄剂倡伢倢倢倢偂伒偄剄剂倢們偄剄剄剄倡伢倢倢倢倢伒値倢倢倢倐伢倢倢倒倐");
-const Sprite_Bricks = Resource.Register.Sprite("Bricks", "16|7|乫嶿姷嵿嗿巿巳崿凼婤務吮你刀丑休一一両儳儳儳儳儰丱休伐一丁倀一丂倢倢値剑剔剕匔剄单兕单卓单匳儱儳儳儓儴剄卅佔剅剑剕单匵单单儓儳儳伳儳儴剑剅卄匔剄单兕单卓卅匳儱儳儳儓儴剄卅佄剄十協单匴協单儓儳儳伳儳儰");
+const Sprite_Concrete = Resource.Register.Sprite("Concrete", "16|7|乊亠堍埚埕偒匠一一倅匀佫佀刐匥丆匁偈偤嘢刅吅丠乒佀偕別刂卑呐严嘦劆偐伤佒刐倁匤匂佀偔丠丂厂倈倨七一冫已姿");
+const Sprite_Bricks = Resource.Register.Sprite("Bricks", "16|7|么倮偍屼唀一七崉乀倅匡乒刀啀买七一冿巻巿匡卒佐啀估七刀儀巻巿姵卖何呀乴七一儀主巿姿嵖何偕临七刀儀丰仿姿嶿");
 
 // ----------------------------------------------------------------------
 

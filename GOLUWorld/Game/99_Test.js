@@ -17,11 +17,17 @@ const TEST_CYCLE = function(DT){
 
 const TEST_START = function(){
     World.Start();
+
+    for(let y = 0; y < 40; y++) {
+        for(let x = 0; x < 40; x++) {
+            World.SetTile(x, y, Tile_Grass);
+        }
+    }
     
-    for(let y = 0; y < 10; y++) {
-        for(let x = 0; x < 20; x++) {
+    for(let y = 10; y < 30; y++) {
+        for(let x = 10; x < 30; x++) {
             World.SetTile(x, y, Tile_Ground);
-            if (x === 0 || y === 0 || x === 19 || y === 9) World.SetTile(x, y, Tile_Bricks);
+            if (x === 10 || y === 10 || x === 29 || y === 29) World.SetTile(x, y, Tile_Bricks);
         }
     }
 }

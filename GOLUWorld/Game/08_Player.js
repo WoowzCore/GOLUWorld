@@ -6,8 +6,10 @@ Player.Camera.Y = 0;
 Player.Camera.Zoom = 1;
 
 Player.Camera.Update = function(DT){
-    const PlayerCenterX = World.MainPlayer.Position.X + WORLD_TILE_SIZE * 0.5;
-    const PlayerCenterY = World.MainPlayer.Position.Y + WORLD_TILE_SIZE * 0.5;
+    const PlayerX = Math.round(World.MainPlayer.Position.X);
+    const PlayerY = Math.round(World.MainPlayer.Position.Y);
+    const PlayerCenterX = PlayerX + WORLD_TILE_SIZE * 0.5;
+    const PlayerCenterY = PlayerY + WORLD_TILE_SIZE * 0.5;
 
     const MouseOffsetX = Input.Mouse.Position[0] - (Graphic.BufferW * 0.5);
     const MouseOffsetY = Input.Mouse.Position[1] - (Graphic.BufferH * 0.5);
@@ -43,8 +45,6 @@ class GamePlayer extends GameEntity{
             LookX = LookX * MirrorX;
             
             Graphic.Canvas(48, 48, X + 8, Y + 8, MirrorX, 1, 0, 0, 0, (W, H) => {
-                Graphic.DrawSprite(16, 16 + 12, Sprite_PlayerShadow);
-                
                 Graphic.DrawSprite(16, 16, Sprite_PlayerBody);
                 Graphic.DrawSprite(16, 16, Sprite_PlayerMouth);
                 
@@ -66,11 +66,13 @@ class GamePlayer extends GameEntity{
                     }
                 };
                 
-                RenderEye(16 + 4, 16 + 5, Sprite_PlayerEyeLeft, Sprite_PlayerEyeLeftClose, this.IsBlinking, false);
-                RenderEye(16 + 11, 16 + 4, Sprite_PlayerEyeRight, Sprite_PlayerEyeRightClose, this.IsBlinking, true);
+                RenderEye(16 + 4, 16 + 4, Sprite_PlayerEyeLeft, Sprite_PlayerEyeLeftClose, this.IsBlinking, false);
+                RenderEye(16 + 11, 16 + 3, Sprite_PlayerEyeRight, Sprite_PlayerEyeRightClose, this.IsBlinking, true);
                 
                 Graphic.DrawSprite(16, 16, Sprite_PlayerNose);
             });
+            
+            Graphic.FillHeightSprite(X, Y, Sprite_PlayerBody, 64);
         };
     }
 

@@ -107,6 +107,7 @@ class GameTile{
         if(RenderResource instanceof Sprite){
             this.Render.RenderFunction = (X, Y) => {
                 Graphic.DrawSprite(X, Y, RenderResource);
+                Graphic.FillHeight(X, Y, X + WORLD_TILE_SIZE, Y + WORLD_TILE_SIZE, this.Tile.Height);
             };
         }else if(typeof RenderResource === "function"){
             this.Render.RenderFunction = RenderResource;
@@ -147,11 +148,13 @@ class GameEntity{
         
         this.Position.AddVelocity(this.VelocityX * DT, this.VelocityY * DT);
     }
-    
+
     Draw(CameraX = 0, CameraY = 0){
         if(!this.DoRender){ return; }
 
-        this.Render.Render(this.Position.X - CameraX, this.Position.Y - CameraY);
+        const SnappedX = Math.round(this.Position.X);
+        const SnappedY = Math.round(this.Position.Y);
+        this.Render.Render(SnappedX - CameraX, SnappedY - CameraY);
     }
 }
 
@@ -176,6 +179,7 @@ Entity.Register.Tile.Register = function(Name, Layer, SpriteOrRender = Sprite_Er
         Layer: Layer,
         SpriteOrRender: SpriteOrRender,
         IsSolid: Extra.IsSolid || (Layer === TILE_LAYER_WALL),
+        Height: Extra.Height || (Layer === TILE_LAYER_WALL ? 255 : 0),
         Extra: Extra
     };
     return ID;
