@@ -1,6 +1,4 @@
-﻿const WORLD_TILE_SIZE = 16;
-
-const World = {};
+﻿const World = {};
 
 World.Map = {};
 
@@ -60,6 +58,20 @@ World.SetTile = function(X, Y, TileID){
     World.Map.Tiles[Def.Layer][Index].SetTile(Def);
 }
 
+World.ScreenToWorld = function(ScreenX, ScreenY, CameraX, CameraY){
+    return {
+        X: ScreenX + CameraX,
+        Y: ScreenY + CameraY
+    };
+}
+
+World.WorldToTile = function(WorldX, WorldY){
+    return {
+        TX: Math.floor(WorldX / SIZE_TILE),
+        TY: Math.floor(WorldY / SIZE_TILE)
+    };
+}
+
 World.Start = function(MapSizeW = 256, MapSizeH = 256){
     World.Map.SizeW = MapSizeW;
     World.Map.SizeH = MapSizeH;
@@ -100,12 +112,12 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
     const ScreenW = Graphic.BufferW;
     const ScreenH = Graphic.BufferH;
     const Ext = Graphic.ScreenExtend;
-    const ExtTile = Ext / WORLD_TILE_SIZE;
+    const ExtTile = Ext / SIZE_TILE;
 
-    let X1 = Math.floor(CameraX / WORLD_TILE_SIZE) - 1 - ExtTile;
-    let Y1 = Math.floor(CameraY / WORLD_TILE_SIZE) - 1 - ExtTile;
-    let X2 = Math.ceil((CameraX + ScreenW) / WORLD_TILE_SIZE) + 1 + ExtTile;
-    let Y2 = Math.ceil((CameraY + ScreenH) / WORLD_TILE_SIZE) + 1 + ExtTile;
+    let X1 = Math.floor(CameraX / SIZE_TILE) - 1 - ExtTile;
+    let Y1 = Math.floor(CameraY / SIZE_TILE) - 1 - ExtTile;
+    let X2 = Math.ceil((CameraX + ScreenW) / SIZE_TILE) + 1 + ExtTile;
+    let Y2 = Math.ceil((CameraY + ScreenH) / SIZE_TILE) + 1 + ExtTile;
 
     X1 = Math.max(0, X1);
     Y1 = Math.max(0, Y1);
@@ -120,11 +132,11 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
                 const Tile = LayerData[RowOffset + X];
                 if(!Tile.Tile || Tile.Tile.Name === "Empty"){ continue; }
 
-                const ScreenX = (X * WORLD_TILE_SIZE) - CameraX;
-                const ScreenY = (Y * WORLD_TILE_SIZE) - CameraY;
+                const ScreenX = (X * SIZE_TILE) - CameraX;
+                const ScreenY = (Y * SIZE_TILE) - CameraY;
 
-                if(ScreenX + WORLD_TILE_SIZE > 0 && ScreenX < ScreenW &&
-                   ScreenY + WORLD_TILE_SIZE > 0 && ScreenY < ScreenH)
+                if(ScreenX + SIZE_TILE > 0 && ScreenX < ScreenW &&
+                   ScreenY + SIZE_TILE > 0 && ScreenY < ScreenH)
                 {
                     Tile.Render.Render(ScreenX, ScreenY, false);
                 }
@@ -142,9 +154,9 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
     
     World.Map.Entities.sort((A, B) => A.Position.Y - B.Position.Y);
     for(let Entity of World.Map.Entities){
-        if(Entity.Position.X + WORLD_TILE_SIZE > CameraX &&
+        if(Entity.Position.X + SIZE_TILE > CameraX &&
            Entity.Position.X < CameraX + ScreenW &&
-           Entity.Position.Y + WORLD_TILE_SIZE > CameraY &&
+           Entity.Position.Y + SIZE_TILE > CameraY &&
            Entity.Position.Y < CameraY + ScreenH
         ){
             Entity.Draw(CameraX, CameraY);
@@ -169,11 +181,10 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
     World.TEST_DebugRenderBounds(CameraX, CameraY);
 }
 
-
 World.TEST_DebugRenderBounds = function(CameraX, CameraY){
     const ScreenW = Graphic.BufferW;
     const ScreenH = Graphic.BufferH;
-    const TS = WORLD_TILE_SIZE;
+    const TS = SIZE_TILE;
 
     const WorldX1 = -CameraX;
     const WorldY1 = -CameraY;

@@ -7,15 +7,15 @@
     X  = 0;
     Y  = 0;
 
-    get TileX(){ return Math.floor(this.X / WORLD_TILE_SIZE); }
-    get TileY(){ return Math.floor(this.Y / WORLD_TILE_SIZE); }
+    get TileX(){ return Math.floor(this.X / SIZE_TILE); }
+    get TileY(){ return Math.floor(this.Y / SIZE_TILE); }
 
-    get OffsetX(){ return this.X % WORLD_TILE_SIZE; }
-    get OffsetY(){ return this.Y % WORLD_TILE_SIZE; }
+    get OffsetX(){ return this.X % SIZE_TILE; }
+    get OffsetY(){ return this.Y % SIZE_TILE; }
 
     SetPositionTile(TX, TY){
-        if(TX !== undefined){ this.X = TX * WORLD_TILE_SIZE; }
-        if(TY !== undefined){ this.Y = TY * WORLD_TILE_SIZE; }
+        if(TX !== undefined){ this.X = TX * SIZE_TILE; }
+        if(TY !== undefined){ this.Y = TY * SIZE_TILE; }
     }
     
     SetPositionPixels(PX, PY){
@@ -35,7 +35,7 @@ class GameRender{
     
     constructor(Position, RenderFunction = undefined, HeightFunction = undefined){
         this.Position = Position;
-        this.RenderFunction = RenderFunction || function(X, Y){ Graphic.DrawRect(X, Y, X + WORLD_TILE_SIZE, Y + WORLD_TILE_SIZE, 255, 0, 255); };
+        this.RenderFunction = RenderFunction || function(X, Y){ Graphic.DrawRect(X, Y, X + SIZE_TILE, Y + SIZE_TILE, 255, 0, 255); };
         this.HeightFunction = HeightFunction || null;
     }
     
@@ -67,15 +67,15 @@ class GameCollider{
     /** @type GamePosition */
     Position = null;
     
-    constructor(Position, W = WORLD_TILE_SIZE, H = WORLD_TILE_SIZE) {
+    constructor(Position, W = SIZE_TILE, H = SIZE_TILE) {
         this.Position = Position;
         
         this.W = W;
         this.H = H;
     }
 
-    W = WORLD_TILE_SIZE;
-    H = WORLD_TILE_SIZE;
+    W = SIZE_TILE;
+    H = SIZE_TILE;
     
     OffsetX = 0;
     OffsetY = 0;
@@ -96,7 +96,7 @@ class GameTile{
     Collider = null;
     
     constructor(X, Y, Layer, Tile){
-        this.Position = new GamePosition(X * WORLD_TILE_SIZE, Y * WORLD_TILE_SIZE);
+        this.Position = new GamePosition(X * SIZE_TILE, Y * SIZE_TILE);
         this.Render   = new GameRender(this.Position);
         this.Collider = new GameCollider(this.Position);
         
@@ -123,7 +123,7 @@ class GameTile{
                 Graphic.DrawSprite(X, Y, RenderResource);
             };
             this.Render.HeightFunction = (X, Y) => {
-                Graphic.FillHeight(X, Y, X + WORLD_TILE_SIZE, Y + WORLD_TILE_SIZE, this.Tile.Height);
+                Graphic.FillHeight(X, Y, X + SIZE_TILE, Y + SIZE_TILE, this.Tile.Height);
             };
         }else if(typeof RenderResource === "function"){
             this.Render.RenderFunction = RenderResource;
@@ -131,7 +131,7 @@ class GameTile{
             this.Render.RenderFunction = null
         }else{
             this.Render.RenderFunction = (X, Y) => {
-                Graphic.DrawRect(X, Y, X + WORLD_TILE_SIZE, Y + WORLD_TILE_SIZE, 255, 0, 255);
+                Graphic.DrawRect(X, Y, X + SIZE_TILE, Y + SIZE_TILE, 255, 0, 255);
             };
         }
     }
@@ -148,7 +148,7 @@ class GameEntity{
     constructor(X = 0, Y = 0){
         this.Position = new GamePosition(X, Y);
         this.Render   = new GameRender(this.Position);
-        this.Collider = new GameCollider(this.Position, WORLD_TILE_SIZE, WORLD_TILE_SIZE);
+        this.Collider = new GameCollider(this.Position, SIZE_TILE, SIZE_TILE);
     }
     
     DoRender = true;

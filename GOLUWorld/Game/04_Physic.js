@@ -5,10 +5,10 @@ Physic.Intersects = function(X1, Y1, W1, H1, X2, Y2, W2, H2){
 }
 
 Physic.CollidesWithTiles = function(X, Y, W, H){
-    const TX1 = Math.floor(X / WORLD_TILE_SIZE);
-    const TY1 = Math.floor(Y / WORLD_TILE_SIZE);
-    const TX2 = Math.floor((X + W - 1) / WORLD_TILE_SIZE);
-    const TY2 = Math.floor((Y + H - 1) / WORLD_TILE_SIZE);
+    const TX1 = Math.floor(X / SIZE_TILE);
+    const TY1 = Math.floor(Y / SIZE_TILE);
+    const TX2 = Math.floor((X + W - 1) / SIZE_TILE);
+    const TY2 = Math.floor((Y + H - 1) / SIZE_TILE);
 
     for(let TY = TY1; TY <= TY2; TY++){
         for(let TX = TX1; TX <= TX2; TX++){

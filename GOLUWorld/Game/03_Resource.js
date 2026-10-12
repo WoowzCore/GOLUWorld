@@ -117,3 +117,44 @@ Resource.Register.Sprite = function(Name, DataString){
     
     return NewSprite;
 }
+
+Resource.Register.SpriteFromSprite = function(Name, Source, X, Y, W, H) {
+    if(!Source){
+        return null;
+    }
+    if(Source.Data === null){
+        return null;
+    }
+    
+    X = X | 0;
+    Y = Y | 0;
+    W = W | 0;
+    H = H | 0;
+    
+    if(X < 0){ X = 0; }
+    if(Y < 0){ Y = 0; }
+    if(X + W > Source.Width){ W = Source.Width - X; }
+    if(Y + H > Source.Height){ H = Source.Height - Y; }
+    
+    if(W <= 0 || H <= 0){ return null; }
+    
+    const SourceData = Source.Data;
+    const SourceW = Source.Width;
+    const NewData = new Uint32Array(W * H);
+    
+    for(let Row = 0; Row < H; Row++){
+        const SrcRow = (Y + Row) * SourceW + X;
+        const DstRow = Row * W;
+    
+        for(let Col = 0; Col < W; Col++){
+            NewData[DstRow + Col] = SourceData[SrcRow + Col];
+        }
+    }
+    
+    let ID = Object.keys(Resource.Sprites).length + 1;
+    const NewSprite = new Sprite(Name, ID, W, H, Source.HasR, Source.HasG, Source.HasB, Source.HasA, Source.IsGray, NewData);
+    
+    Resource.Sprites[ID] = NewSprite;
+    
+    return NewSprite;
+}

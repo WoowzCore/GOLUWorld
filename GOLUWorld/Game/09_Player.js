@@ -8,8 +8,8 @@ Player.Camera.Zoom = 1;
 Player.Camera.Update = function(DT){
     const PlayerX = Math.round(World.MainPlayer.Position.X);
     const PlayerY = Math.round(World.MainPlayer.Position.Y);
-    const PlayerCenterX = PlayerX + WORLD_TILE_SIZE * 0.5;
-    const PlayerCenterY = PlayerY + WORLD_TILE_SIZE * 0.5;
+    const PlayerCenterX = PlayerX + SIZE_TILE * 0.5;
+    const PlayerCenterY = PlayerY + SIZE_TILE * 0.5;
 
     const MouseOffsetX = Input.Mouse.Position[0] - (Graphic.BufferW * 0.5);
     const MouseOffsetY = Input.Mouse.Position[1] - (Graphic.BufferH * 0.5);
@@ -23,14 +23,14 @@ class GamePlayer extends GameEntity{
         super(X, Y);
 
         this.Collider.OffsetX = this.Collider.OffsetY = 2;
-        this.Collider.W = this.Collider.H = WORLD_TILE_SIZE - this.Collider.OffsetX * 2; 
+        this.Collider.W = this.Collider.H = SIZE_TILE - this.Collider.OffsetX * 2; 
         
         this.Render.RenderFunction = (X, Y) => {
             const MouseWorldX = Input.Mouse.Position[0] + Player.Camera.X;
             const MouseWorldY = Input.Mouse.Position[1] + Player.Camera.Y;
 
-            const PlayerX = this.Position.X + WORLD_TILE_SIZE * 0.5;
-            const PlayerY = this.Position.Y + WORLD_TILE_SIZE * 0.5;
+            const PlayerX = this.Position.X + SIZE_TILE * 0.5;
+            const PlayerY = this.Position.Y + SIZE_TILE * 0.5;
             
             const DX = MouseWorldX - PlayerX;
             const DY = MouseWorldY - PlayerY;
@@ -109,7 +109,7 @@ class GamePlayer extends GameEntity{
         }
         
         if(Input.KeyIsPressed("home")){
-            this.Position.X = this.Position.Y = WORLD_TILE_SIZE * 5;
+            this.Position.X = this.Position.Y = SIZE_TILE * 5;
         }
         
         this.Speed = Input.KeyIsPressed("shiftl") ? 120 : 60;
