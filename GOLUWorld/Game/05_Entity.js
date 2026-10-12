@@ -79,6 +79,8 @@ class GameCollider{
     
     OffsetX = 0;
     OffsetY = 0;
+    
+    Active = true;
 }
 
 const TILE_LAYER_FLOOR   = 0;
@@ -159,8 +161,21 @@ class GameEntity{
     
     Update(DT){
         if(!this.DoUpdate){ return; }
+
+        const VX = this.VelocityX * DT;
+        const VY = this.VelocityY * DT;
         
-        this.Position.AddVelocity(this.VelocityX * DT, this.VelocityY * DT);
+        if(this.Collider.Active){
+            const CX = this.Position.X + this.Collider.OffsetX;
+            const CY = this.Position.Y + this.Collider.OffsetY;
+            
+            const Result = Physic.MoveWithCollision(CX, CY, this.Collider.W, this.Collider.H, VX, VY);
+
+            this.Position.X += Result.X - CX;
+            this.Position.Y += Result.Y - CY;
+        }else{
+            this.Position.AddVelocity(VX, VY);   
+        }
     }
 
     Draw(CameraX = 0, CameraY = 0){
@@ -193,8 +208,8 @@ Entity.Register.Tile.Register = function(Name, Layer, SpriteOrRender = Sprite_Er
         Name: Name,
         Layer: Layer,
         SpriteOrRender: SpriteOrRender,
-        IsSolid: Extra.IsSolid || (Layer === TILE_LAYER_WALL),
-        Height: Extra.Height || (Layer === TILE_LAYER_WALL ? 255 : 0),
+        IsSolid: Extra.IsSolid !== undefined ? Extra.IsSolid : (Layer === TILE_LAYER_WALL),
+        Height: Extra.Height !== undefined ? Extra.Height : (Layer === TILE_LAYER_WALL ? 255 : 0),
         Extra: Extra
     };
     return ID;

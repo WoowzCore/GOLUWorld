@@ -19,10 +19,10 @@ const Sprite_Bricks = Resource.Register.Sprite("Bricks", "16|7|么倮偍屼唀�
 
 // ----------------------------------------------------------------------
 
-const Tile_EmptyFloor   = Entity.Register.Tile.Register("Empty", TILE_LAYER_FLOOR, null);
-const Tile_EmptyWall    = Entity.Register.Tile.Register("Empty", TILE_LAYER_WALL, null);
-const Tile_EmptyOverlay = Entity.Register.Tile.Register("Empty", TILE_LAYER_OVERLAY, null);
-const Tile_EmptyCeiling = Entity.Register.Tile.Register("Empty", TILE_LAYER_CEILING, null);
+const Tile_EmptyFloor   = Entity.Register.Tile.Register("Empty", TILE_LAYER_FLOOR, null, { IsSolid: false });
+const Tile_EmptyWall    = Entity.Register.Tile.Register("Empty", TILE_LAYER_WALL, null, { IsSolid: false });
+const Tile_EmptyOverlay = Entity.Register.Tile.Register("Empty", TILE_LAYER_OVERLAY, null, { IsSolid: false });
+const Tile_EmptyCeiling = Entity.Register.Tile.Register("Empty", TILE_LAYER_CEILING, null, { IsSolid: false });
 
 const Tile_ErrorFloor   = Entity.Register.Tile.Register("Error", TILE_LAYER_FLOOR, Sprite_Error);
 const Tile_ErrorWall    = Entity.Register.Tile.Register("Error", TILE_LAYER_WALL, Sprite_Error);

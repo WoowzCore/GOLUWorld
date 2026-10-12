@@ -27,7 +27,7 @@ const TEST_START = function(){
     for(let y = 10; y < 30; y++) {
         for(let x = 10; x < 30; x++) {
             World.SetTile(x, y, Tile_Ground);
-            if (x === 10 || y === 10 || x === 29 || y === 29) World.SetTile(x, y, Tile_Bricks);
+            if ((x === 10 || y === 10 || x === 29 || y === 29) && !(x === 15 && y === 10)) World.SetTile(x, y, Tile_Bricks);
         }
     }
 }

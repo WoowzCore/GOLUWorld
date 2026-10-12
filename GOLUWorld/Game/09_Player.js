@@ -21,6 +21,9 @@ Player.Camera.Update = function(DT){
 class GamePlayer extends GameEntity{
     constructor(X = 0, Y = 0) {
         super(X, Y);
+
+        this.Collider.OffsetX = this.Collider.OffsetY = 2;
+        this.Collider.W = this.Collider.H = WORLD_TILE_SIZE - this.Collider.OffsetX * 2; 
         
         this.Render.RenderFunction = (X, Y) => {
             const MouseWorldX = Input.Mouse.Position[0] + Player.Camera.X;
@@ -71,7 +74,9 @@ class GamePlayer extends GameEntity{
                 
                 Graphic.DrawSprite(16, 16, Sprite_PlayerNose);
             });
-            
+        };
+        
+        this.Render.HeightFunction = (X, Y) => {
             Graphic.FillHeightSprite(X, Y, Sprite_PlayerBody, 64);
         };
     }
@@ -101,6 +106,10 @@ class GamePlayer extends GameEntity{
                     this.BlinkTimer = 0.1;
                 }
             }
+        }
+        
+        if(Input.KeyIsPressed("home")){
+            this.Position.X = this.Position.Y = WORLD_TILE_SIZE * 5;
         }
         
         this.Speed = Input.KeyIsPressed("shiftl") ? 120 : 60;

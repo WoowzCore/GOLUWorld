@@ -89,7 +89,7 @@ World.Start = function(MapSizeW = 256, MapSizeH = 256){
 
 World.TEST_SUN = 45;
 World.Update = function(DT){
-    World.TEST_SUN = (World.TEST_SUN + 5 * DT) % 360;
+    World.TEST_SUN = (World.TEST_SUN + DT) % 360;
     
     for(let i = 0; i < World.Map.Entities.length; i++){
         World.Map.Entities[i].Update(DT);
@@ -160,9 +160,28 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
         Graphic.HeightBuffer, Graphic.HeightW, Graphic.HeightH, Graphic.ScreenExtend,
         Graphic.ShadowBuffer,
         World.TEST_SUN,
-        20,
+        30,
         180,
         0.75,
         0, 0, 0
     );
+
+    World.TEST_DebugRenderBounds(CameraX, CameraY);
+}
+
+
+World.TEST_DebugRenderBounds = function(CameraX, CameraY){
+    const ScreenW = Graphic.BufferW;
+    const ScreenH = Graphic.BufferH;
+    const TS = WORLD_TILE_SIZE;
+
+    const WorldX1 = -CameraX;
+    const WorldY1 = -CameraY;
+    const WorldX2 = World.Map.SizeW * TS - CameraX;
+    const WorldY2 = World.Map.SizeH * TS - CameraY;
+
+    Graphic.DrawRect(WorldX1, WorldY1, WorldX2, WorldY1 + 2, 255, 0, 0, 255);
+    Graphic.DrawRect(WorldX1, WorldY2 - 2, WorldX2, WorldY2, 255, 0, 0, 255);
+    Graphic.DrawRect(WorldX1, WorldY1, WorldX1 + 2, WorldY2, 255, 0, 0, 255);
+    Graphic.DrawRect(WorldX2 - 2, WorldY1, WorldX2, WorldY2, 255, 0, 0, 255);
 }
