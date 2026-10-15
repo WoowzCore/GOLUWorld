@@ -2,7 +2,6 @@
 using System.Text;
 using Microsoft.ClearScript.JavaScript;
 using Silk.NET.OpenGL;
-using WLI_Input;
 using WLO;
 using WLO.GPU;
 using WLO.Math;
@@ -201,9 +200,9 @@ void main(){
                         Window.IsLocked = false;
                     }
                     
-                    ClearScript.Call("Bridge.Hook.KeyDown", Key.ToString());
+                    ClearScript.CacheCall("Bridge.Hook.KeyDown", Key.ToString());
                 }else{
-                    ClearScript.Call("Bridge.Hook.KeyUp", Key.ToString());
+                    ClearScript.CacheCall("Bridge.Hook.KeyUp", Key.ToString());
                 }
             };
 
@@ -213,9 +212,9 @@ void main(){
                         Window.IsLocked = true;
                     }
                     
-                    ClearScript.Call("Bridge.Hook.MouseButtonDown", (int)Button);
+                    ClearScript.CacheCall("Bridge.Hook.MouseButtonDown", (int)Button);
                 }else{
-                    ClearScript.Call("Bridge.Hook.MouseButtonUp", (int)Button);
+                    ClearScript.CacheCall("Bridge.Hook.MouseButtonUp", (int)Button);
                 }
             };
             
@@ -250,12 +249,12 @@ void main(){
                     LogicalMouseY = WL.Math.ClampF(LogicalMouseY, 0, ScreenSize.H - 8);
                     
                     try{
-                        ClearScript.Call("Bridge.Hook.Cycle", DTI.DT, DTI.FPS, LogicalMouseX, LogicalMouseY);
+                        ClearScript.CacheCall("Bridge.Hook.Cycle", DTI.DT, DTI.FPS, WL.Math.RoundF(LogicalMouseX), WL.Math.RoundF(LogicalMouseY));
                     }catch(Exception e){
                         WL.Logger.Error("Произошла ошибка в игровом цикле!", e);
                     }
 
-                    Window.Title = (ClearScript.Call("Bridge.Hook.WindowTitle") as string)!;
+                    Window.Title = (ClearScript.CacheCall("Bridge.Hook.WindowTitle") as string)!;
                     
                     RenderScreen();
                     
@@ -275,6 +274,8 @@ void main(){
             
             Window?.Close();
             Window = null!;
+            
+            WL.Core.Stop();
         }catch(Exception e){
             WL.Logger.Fatal("Произошла ошибка глобального характера! GOLUWorld больше не доступен на C#!", e);
             throw;

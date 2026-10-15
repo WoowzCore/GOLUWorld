@@ -35,6 +35,9 @@ Game.GlobalRender = function(DT){
     World.Render(Player.Camera.X, Player.Camera.Y);
     
     TEST_CYCLE(DT);
+
+    Graphic.DrawText(6, 6, "Hi, welcome here! " + Input.Mouse.Position[0] + " : " + Input.Mouse.Position[1] + "\nВы поверили?", 64, 64, 64, 255);
+    Graphic.DrawText(5, 5, "Hi, welcome here! " + Input.Mouse.Position[0] + " : " + Input.Mouse.Position[1] + "\nВы поверили?", 255, 255, 255, 255);
     
     Interface.RenderCursor(Input.Mouse.Position[0], Input.Mouse.Position[1]);
 }

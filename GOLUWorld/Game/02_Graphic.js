@@ -9,6 +9,7 @@ const Graphic = {}
 
 Graphic.__Effect = GRAPHIC_EFFECT_NORMAL;
 Graphic.__Clip = { X1: 0, Y1: 0, X2: 0, Y2: 0 }
+Graphic.__Colorize = null;
 
 /** @type Uint32Array */
 Graphic.Buffer = null;
@@ -46,9 +47,14 @@ Graphic.Start = function(){
 
 Graphic.Effect = function(Effect, Function){
     let OldEffect = Graphic.__Effect;
+    
     Graphic.__Effect = Effect;
-    Function();
+    
+    let Result = Function();
+    
     Graphic.__Effect = OldEffect;
+    
+    return Result;
 }
 
 Graphic.Clip = function(X1, Y1, X2, Y2, Function){
@@ -61,13 +67,43 @@ Graphic.Clip = function(X1, Y1, X2, Y2, Function){
     Graphic.__Clip.Y1 = Math.max(0, Y1) | 0;
     Graphic.__Clip.X2 = Math.min(Graphic.BufferW, X2) | 0;
     Graphic.__Clip.Y2 = Math.min(Graphic.BufferH, Y2) | 0;
-    
-    Function();
+
+    let Result = Function();
 
     Graphic.__Clip.X1 = OldClipX1;
     Graphic.__Clip.Y1 = OldClipY1;
     Graphic.__Clip.X2 = OldClipX2;
     Graphic.__Clip.Y2 = OldClipY2;
+    
+    return Result;
+}
+
+Graphic.Colorize = function(R, G, B, A, Multiply, Function){
+    const Old = Graphic.__Colorize;
+    
+    let NewR = R;
+    let NewG = G;
+    let NewB = B;
+    let NewA = A;
+    
+    if(Multiply && Old !== null){
+        NewR = (R * Old.R) >> 8;
+        NewG = (G * Old.G) >> 8;
+        NewB = (B * Old.B) >> 8;
+        NewA = (A * Old.A) >> 8;
+    }
+    
+    if(NewR === 255 && NewG === 255 && NewB === 255 && NewA === 255){
+        Graphic.__Colorize = null;
+    }else{
+        Graphic.__Colorize = { R: NewR, G: NewG, B: NewB, A: NewA };
+    }
+    
+    let Result = Function();
+    
+    Graphic.__Colorize = Old;
+    
+    return Result;
 }
 
 Graphic.__CanvasPool = [];
@@ -121,8 +157,8 @@ Graphic.Canvas = function(W, H, X, Y, SW, SH, PX, PY, Rot, Function){
     Graphic.BufferW = W;
     Graphic.BufferH = H;
     Graphic.__Clip = { X1: 0, Y1: 0, X2: W, Y2: H };
-    
-    Function(W, H);
+
+    let Result = Function(W, H);
     
     const Parent = Graphic.__CanvasStack.pop();
     Graphic.Buffer = Parent.Buffer;
@@ -133,6 +169,8 @@ Graphic.Canvas = function(W, H, X, Y, SW, SH, PX, PY, Rot, Function){
     Graphic.DrawPixelsTransformed(CanvasData, W | 0, H | 0, X, Y, SW, SH, PX, PY, Rot);
     
     Graphic.__CanvasPool.push(CanvasData);
+    
+    return Result;
 }
 
 Graphic.Clear = function(R, G, B){
@@ -218,6 +256,14 @@ Graphic.CalculateColor = function(DR, DG, DB, DA, R, G, B, A, Effect){
 }
 
 Graphic.SetPixel = function(X, Y, R, G, B, A = 255){
+    const Tint = Graphic.__Colorize;
+    if(Tint !== null){
+        R = (R * Tint.R) >> 8;
+        G = (G * Tint.G) >> 8;
+        B = (B * Tint.B) >> 8;
+        A = (A * Tint.A) >> 8;
+    }
+    
     if(A === 0 || !Graphic.InClip(X, Y)){ return; }
     
     const Index = (Y | 0) * Graphic.BufferW + (X | 0);
@@ -240,6 +286,14 @@ Graphic.SetPixel = function(X, Y, R, G, B, A = 255){
 }
 
 Graphic.DrawRect = function(X1, Y1, X2, Y2, R, G, B, A = 255){
+    const Tint = Graphic.__Colorize;
+    if(Tint !== null){
+        R = (R * Tint.R) >> 8;
+        G = (G * Tint.G) >> 8;
+        B = (B * Tint.B) >> 8;
+        A = (A * Tint.A) >> 8;
+    }
+    
     if(A === 0){ return; }
 
     let MinX = Math.floor(Math.min(X1, X2));
@@ -304,6 +358,7 @@ Graphic.DrawPixels = function(X, Y, W, Data){
     const SW = Graphic.BufferW;
     const Buf = Graphic.Buffer;
     const Effect = Graphic.__Effect;
+    const Tint = Graphic.__Colorize;
 
     for(let PY = Y1; PY < Y2; PY++){
         const ScreenRowOffset = PY * SW;
@@ -312,14 +367,22 @@ Graphic.DrawPixels = function(X, Y, W, Data){
         for(let PX = X1; PX < X2; PX++){
             const SIndex = SpriteRowOffset + ((PX - X) | 0);
             const Color = Graphic.DataGet(Data, SIndex, IsU8);
-            const A = (Color >>> 24) & 0xFF;
+            let A = (Color >>> 24) & 0xFF;
 
+            if(Tint !== null){ A = (A * Tint.A) >> 8; }
+            
             if(A === 0){ continue; }
 
-            const R =  Color        & 0xFF;
-            const G = (Color >>> 8 ) & 0xFF;
-            const B = (Color >>> 16) & 0xFF;
+            let R =  Color        & 0xFF;
+            let G = (Color >>> 8 ) & 0xFF;
+            let B = (Color >>> 16) & 0xFF;
 
+            if(Tint !== null){
+                R = (R * Tint.R) >> 8;
+                G = (G * Tint.G) >> 8;
+                B = (B * Tint.B) >> 8;
+            }
+            
             const BufIndex = ScreenRowOffset + PX;
 
             if(Effect === GRAPHIC_EFFECT_NORMAL && A === 255){
@@ -356,10 +419,8 @@ Graphic.DrawPixelsGray = function(X, Y, W, Data, Alpha = 255){
 
     const SW = Graphic.BufferW;
     const Buf = Graphic.Buffer;
-
     const Effect = Graphic.__Effect;
-
-    const FullOpacity = (Alpha === 255 && Effect === GRAPHIC_EFFECT_NORMAL);
+    const Tint = Graphic.__Colorize;
 
     for(let PY = Y1; PY < Y2; PY++){
         const ScreenRowOffset = PY * SW;
@@ -368,15 +429,25 @@ Graphic.DrawPixelsGray = function(X, Y, W, Data, Alpha = 255){
         for(let PX = X1; PX < X2; PX++){
             const Value = Data[SpriteRowOffset + ((PX - X) | 0)];
 
+            let A = Alpha;
+            
+            if(Tint !== null){ A = (A * Tint.A) >> 8; }
+            
             if(Alpha === 0){ continue; }
 
-            const R = Value;
-            const G = Value;
-            const B = Value;
+            let R = Value;
+            let G = Value;
+            let B = Value;
 
+            if(Tint !== null){
+                R = (R * Tint.R) >> 8;
+                G = (G * Tint.G) >> 8;
+                B = (B * Tint.B) >> 8;
+            }
+            
             const BufIndex = ScreenRowOffset + PX;
 
-            if(FullOpacity){
+            if(Alpha === 255 && Effect === GRAPHIC_EFFECT_NORMAL){
                 Buf[BufIndex] = (255 << 24) | (B << 16) | (G << 8) | R;
             }else{
                 const DColor = Buf[BufIndex];
@@ -385,7 +456,7 @@ Graphic.DrawPixelsGray = function(X, Y, W, Data, Alpha = 255){
                 const DB = (DColor >> 16) & 0xFF;
                 const DA = (DColor >> 24) & 0xFF;
 
-                Graphic.CalculateColor(DR, DG, DB, DA, R, G, B, Alpha, Effect);
+                Graphic.CalculateColor(DR, DG, DB, DA, R, G, B, A, Effect);
 
                 Buf[BufIndex] = (Graphic.CalculateColorResult.A << 24) | (Graphic.CalculateColorResult.B << 16) | (Graphic.CalculateColorResult.G << 8) | Graphic.CalculateColorResult.R;
             }
@@ -445,6 +516,12 @@ Graphic.DrawPixelsTransformed = function(Data, W, H, X, Y, SW, SH, PX, PY, Rot){
             RY += SM3;
         }
     }
+}
+
+Graphic.DrawText = function(X, Y, Text, R = 255, G = 255, B = 255, A = 255, Font = undefined){
+    Font = Font === undefined ? Font_Default : Font;
+    
+    return Graphic.Colorize(R, G, B, A, true, () => Font.RenderText(X, Y, Text));
 }
 
 // ----------------------------------------------------------------------
@@ -562,6 +639,7 @@ Graphic.GenerateShadows = function(
     SunHeight = 45,
     Strength = 140,
     Softness = 1,
+    Levels = 0,
     ShadowR = 0, ShadowG = 0, ShadowB = 0
 ){
     const W = BufferW;
@@ -569,98 +647,105 @@ Graphic.GenerateShadows = function(
     const HBuf = HeightBuffer;
     const SBuf = ShadowBuffer;
     const Buf = Buffer;
-    
+
     SBuf.fill(0);
-    
+
     const AngleRad = SunAngle * Math.PI / 180;
     const ShadowDX = Math.cos(AngleRad);
     const ShadowDY = Math.sin(AngleRad);
-    
+
     const HeightRad = Math.max(1, Math.min(89, SunHeight)) * Math.PI / 180;
     const LengthScale = 1 / Math.tan(HeightRad);
-    
+
     const MAX_SHADOW = 64;
-    
+
     const DXPos = ShadowDX > 0;
     const DXNeg = ShadowDX < 0;
     const DXZero = ShadowDX === 0;
     const DYPos = ShadowDY > 0;
     const DYNeg = ShadowDY < 0;
     const DYZero = ShadowDY === 0;
-    
+
     for(let EY = 0; EY < HeightExtH; EY++){
         const ExtRow = EY * HeightExtW;
         const SrcScreenY = EY - Ext;
-    
+
         for(let EX = 0; EX < HeightExtW; EX++){
             const HVal = HBuf[ExtRow + EX];
             if(HVal <= 0){ continue; }
-    
+
             const SrcScreenX = EX - Ext;
-    
+
             let ShadowLength = ((HVal * LengthScale) / 16) | 0;
             if(ShadowLength > MAX_SHADOW){ ShadowLength = MAX_SHADOW; }
             if(ShadowLength <= 0){ continue; }
-    
+
             const InvLength = 1 / ShadowLength;
             const InvLengthSoft = InvLength * Softness;
-    
+
             let FX = SrcScreenX + ShadowDX;
             let FY = SrcScreenY + ShadowDY;
-    
+
             if(DXPos && SrcScreenX >= W){ continue; }
             if(DXNeg && SrcScreenX < 0){ continue; }
             if(DYPos && SrcScreenY >= H){ continue; }
             if(DYNeg && SrcScreenY < 0){ continue; }
-    
+
             for(let S = 1; S <= ShadowLength; S++){
                 const SX = FX | 0;
                 const SY = FY | 0;
                 FX += ShadowDX;
                 FY += ShadowDY;
-    
+
                 if(DXPos && SX >= W){ break; }
                 if(DXNeg && SX < 0){ break; }
                 if(DXZero && (SX < 0 || SX >= W)){ break; }
                 if(DYPos && SY >= H){ break; }
                 if(DYNeg && SY < 0){ break; }
                 if(DYZero && (SY < 0 || SY >= H)){ break; }
-    
+
                 if(SX < 0 || SY < 0 || SX >= W || SY >= H){ continue; }
-    
+
                 const TargetH = HBuf[(SY + Ext) * HeightExtW + (SX + Ext)];
-    
+
                 const ShadowHeight = HVal * (1 - S * InvLength);
                 if(ShadowHeight <= TargetH){ continue; }
-    
+
                 const SIndex = SY * W + SX;
-    
+
                 let Falloff = 1 - (S - 1) * InvLengthSoft;
                 if(Falloff < 0){ Falloff = 0; }
-    
+
                 const Amount = (Strength * Falloff) | 0;
-    
+
                 if(Amount > SBuf[SIndex]){ SBuf[SIndex] = Amount; }
             }
         }
     }
-    
+
     const Inv255 = 1 / 255;
+    const Step = Levels > 0 ? (255 / Levels) : 0;
+
     for(let I = 0, N = W * H; I < N; I++){
-        const Amount = SBuf[I];
+        let Amount = SBuf[I];
         if(Amount <= 0){ continue; }
-    
+
+        if(Levels > 0){
+            Amount = Math.ceil(Amount / Step) * Step;
+            if(Amount > 255){ Amount = 255; }
+        }
+
         const Color = Buf[I];
         const DR =  Color        & 0xFF;
         const DG = (Color >> 8 ) & 0xFF;
         const DB = (Color >> 16) & 0xFF;
         const DA = (Color >> 24) & 0xFF;
-    
+
         const IA = 255 - Amount;
         const R = ((ShadowR * Amount) + (DR * IA)) * Inv255 | 0;
         const G = ((ShadowG * Amount) + (DG * IA)) * Inv255 | 0;
         const B = ((ShadowB * Amount) + (DB * IA)) * Inv255 | 0;
-    
+
         Buf[I] = (DA << 24) | (B << 16) | (G << 8) | R;
     }
 }

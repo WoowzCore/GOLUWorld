@@ -87,6 +87,7 @@ Bridge.Hook.KeyUp = function(Key){
 
 Bridge.Hook.MouseButtonDown = function(Button){
     if(Input.Mouse.Buttons[Button] !== true){
+        Log.Info(Button);
         TEST_MOUSEPRESS(Button, true);
     }
     

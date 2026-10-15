@@ -31,11 +31,152 @@
     Data = null;
 }
 
+class Glyph{
+    constructor(Sprite, Width, Height = undefined){
+        Sprite = Sprite ? Sprite : Sprite_Error;
+        this.Sprite = Sprite;
+        this.Width  = this.W = Width  !== undefined ? Width  : Sprite.Width;
+        this.Height = this.H = Height !== undefined ? Height : Sprite.Height;
+    }
+    
+    static CreateSpace(Width = 8){
+        let Space = new Glyph(undefined, Width, 1);
+        Space.Sprite = null;
+        Space.SpecialAction = function(CX, CY, Font, SX, SY, OnlyCalculate){
+            return [CX + Space.W + Font.Spacing, CY];
+        };
+        return Space;
+    }
+    
+    static CreateNewLine(){
+        let NewLine = new Glyph(undefined, 0, 0);
+        NewLine.Sprite = null;
+        NewLine.SpecialAction = function(CX, CY, Font, SX, SY, OnlyCalculate){
+            return [SX, CY + Font.LineHeight];
+        };
+        return NewLine;
+    }
+    
+    /** @type Sprite */
+    Sprite = null;
+    
+    Width = -1;
+    Height = -1;
+    W = -1;
+    H = -1;
+    
+    Render(X, Y, OnlyCalculate = false){
+        if(this.Sprite !== null && !OnlyCalculate){
+            Graphic.DrawSprite(X, Y, this.Sprite);
+        }
+        
+        return this.Width;
+    }
+    
+    /** @type {(function(number,number,Font,number,number,boolean): [number,number])|null} */
+    SpecialAction = null;
+}
+
+class Font{
+    constructor(Name, LineHeight = 8, Spacing = 1){
+        this.Name = Name;
+        this.LineHeight = LineHeight;
+        this.Spacing = Spacing;
+    }
+    
+    RegisterDefaultsGlyphs(Width = 8){
+        this.RegisterGlyph('\r', null);
+        this.RegisterGlyph(' ', Glyph.CreateSpace(Width));
+        this.RegisterGlyph('\n', Glyph.CreateNewLine());
+        this.RegisterGlyph('\t', Glyph.CreateSpace(Width * 4));
+    }
+    
+    Name = "";
+    LineHeight = 8;
+    Spacing = 1;
+    
+    /** @type {Map<number, Glyph>} */
+    Glyphs = new Map();
+    
+    /** @type {Glyph|null} */
+    FallbackGlyph = null;
+    
+    RegisterGlyph(CharOrCode, Glyph){
+        if(Array.isArray(CharOrCode)){
+            for(const Item of CharOrCode){
+                this.RegisterGlyph(Item, Glyph);
+            }
+            return Glyph;
+        }
+        
+        if(typeof CharOrCode === "string"){
+            for(const Char of CharOrCode){
+                this.Glyphs.set(Char.codePointAt(0), Glyph);
+            }
+            return Glyph;
+        }
+        
+        this.Glyphs.set(CharOrCode, Glyph);
+        return Glyph;
+    }
+    
+    HasGlyph(CharOrCode){
+        let Glyph = this.GetGlyph(CharOrCode);
+        return !(!Glyph || Glyph === this.FallbackGlyph);
+    }
+    
+    GetGlyph(CharOrCode){
+        if(typeof CharOrCode === "string"){
+            CharOrCode = CharOrCode.codePointAt(0);
+        }
+        
+        if(this.Glyphs.has(CharOrCode)){
+            return this.Glyphs.get(CharOrCode);
+        }
+        
+        return this.FallbackGlyph;
+    }
+    
+    RenderText(X, Y, Text, OnlyCalculate = false){
+        if(!Text){ return [0, 0]; }
+        
+        const StartX = X;
+        const StartY = Y;
+        
+        let MaxX = X;
+        let MaxY = Y;
+        
+        let CX = X;
+        let CY = Y;
+        
+        for(const Char of Text){
+            const Glyph = this.GetGlyph(Char);
+            
+            if(Glyph){
+                if(Glyph.SpecialAction){
+                    let Result = Glyph.SpecialAction(CX, CY, this, StartX, StartY, OnlyCalculate);
+                    CX = Result[0];
+                    CY = Result[1];
+                }else{
+                    CX += Glyph.Render(CX, CY, OnlyCalculate) + this.Spacing;
+                }
+
+                if(CX > MaxX){ MaxX = CX; }
+                if(CY > MaxY){ MaxY = CY; }
+            }
+        }
+        
+        return [MaxX - StartX, (MaxY - StartY) + this.LineHeight];
+    }
+}
+
 // ----------------------------------------------------------------------
 
 const Resource = {}
 
 Resource.Sprites = {}
+
+Resource.Fonts = {};
 
 // ----------------------------------------------------------------------
 
@@ -157,4 +298,79 @@ Resource.Register.SpriteFromSprite = function(Name, Source, X, Y, W, H) {
     Resource.Sprites[ID] = NewSprite;
     
     return NewSprite;
+}
+
+Resource.Register.Font = function(Name, Atlas, CharSequence, FallbackChar = '', CharW = 8, CharH = 8, MonoSpaced = false){
+    const Spacing = 1;
+    const LineHeight = CharH + Spacing;
+    
+    const Font__ = new Font(Name, LineHeight, Spacing);
+    Font__.RegisterDefaultsGlyphs(CharW);
+    
+    const Cols = Math.floor(Atlas.Width / CharW);
+    let Index = 0;
+    
+    const CharGroups = Array.isArray(CharSequence) ? CharSequence : Array.from(CharSequence);
+    
+    for(const Group of CharGroups){
+        const FirstChar = typeof Group === "string" ? Group[0] : Group;
+        
+        if(Font__.HasGlyph(FirstChar)){ Index++; continue; }
+        
+        const Col = Index % Cols;
+        const Row = Math.floor(Index / Cols);
+        
+        const X = Col * CharW;
+        const Y = Row * CharH;
+        
+        const SpriteName = `Font_${Name}_${Group}`;
+        let CharSprite = null;
+        
+        let FinalWidth = null;
+        
+        if(MonoSpaced){
+            CharSprite = Resource.Register.SpriteFromSprite(SpriteName, Atlas, X, Y, CharW, CharH);
+            FinalWidth = CharW;
+        }else{
+            let MaxX = -1;
+            
+            const AtlasData = Atlas.Data;
+            const AtlasW = Atlas.W;
+            
+            for(let R = 0; R < CharH; R++){
+                const RowOffset = (Y + R) * AtlasW + X;
+                for(let C = 0; C < CharW; C++){
+                    const Color = AtlasData[RowOffset + C];
+                    const Alpha = (Color >>> 24) & 0xFF;
+                    
+                    if(Alpha > 63){
+                        if(C > MaxX){ MaxX = C; }
+                    }
+                }
+            }
+            
+            if(MaxX === -1){
+                MaxX = Math.floor(CharW / 2) - 1;
+                if(MaxX < 0){ MaxX = 0; }
+            }
+            
+            const TrimmedW = MaxX + 1;
+            
+            CharSprite = Resource.Register.SpriteFromSprite(SpriteName, Atlas, X, Y, TrimmedW, CharH);
+            FinalWidth = TrimmedW;
+        }
+        
+        const Glyph__ = new Glyph(CharSprite, FinalWidth, CharH);
+
+        Font__.RegisterGlyph(Group, Glyph__);
+        
+        if(FallbackChar !== '' && (Group === FallbackChar || (typeof Group === 'string' && Group.includes(FallbackChar)))){
+            Font__.FallbackGlyph = Glyph__;
+        }
+        
+        Index++;
+    }
+    
+    Resource.Fonts[Name] = Font__;
+    return Font__;
 }

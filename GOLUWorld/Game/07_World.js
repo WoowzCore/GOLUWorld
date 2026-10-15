@@ -175,6 +175,7 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
         30,
         180,
         0.75,
+        6,
         0, 0, 0
     );
 
@@ -182,8 +183,6 @@ World.Render = function(CameraX = 0, CameraY = 0, Zoom = 1){
 }
 
 World.TEST_DebugRenderBounds = function(CameraX, CameraY){
-    const ScreenW = Graphic.BufferW;
-    const ScreenH = Graphic.BufferH;
     const TS = SIZE_TILE;
 
     const WorldX1 = -CameraX;
