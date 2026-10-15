@@ -67,7 +67,8 @@ Bridge.Hook.KeyDown = function(Key){
     
     if(Input.Keys[Key] !== true){
         Log.Info(Key);
-        // press
+        
+        Player.KeyPress(Key, true);
     }
     
     Input.Keys[Key] = true;
@@ -79,7 +80,7 @@ Bridge.Hook.KeyUp = function(Key){
     Key = __ConvertKeys[Key] || Key;
 
     if(Input.Keys[Key] !== false){
-        // press
+        Player.KeyPress(Key, false);
     }
     
     Input.Keys[Key] = false;
@@ -88,7 +89,7 @@ Bridge.Hook.KeyUp = function(Key){
 Bridge.Hook.MouseButtonDown = function(Button){
     if(Input.Mouse.Buttons[Button] !== true){
         Log.Info(Button);
-        TEST_MOUSEPRESS(Button, true);
+        
     }
     
     Input.Mouse.Buttons[Button] = true;
@@ -96,7 +97,7 @@ Bridge.Hook.MouseButtonDown = function(Button){
 
 Bridge.Hook.MouseButtonUp = function(Button){
     if(Input.Mouse.Buttons[Button] !== false){
-        TEST_MOUSEPRESS(Button, false);
+        
     }
     
     Input.Mouse.Buttons[Button] = false;

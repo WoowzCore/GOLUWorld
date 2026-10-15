@@ -339,6 +339,22 @@ Graphic.DrawRect = function(X1, Y1, X2, Y2, R, G, B, A = 255){
     }
 }
 
+Graphic.DrawRectOutline = function(X1, Y1, X2, Y2, Thickness, R, G, B, A = 255){
+    if(A === 0 || Thickness <= 0){ return; }
+
+    const MinX = Math.floor(Math.min(X1, X2));
+    const MaxX = Math.floor(Math.max(X1, X2));
+    const MinY = Math.floor(Math.min(Y1, Y2));
+    const MaxY = Math.floor(Math.max(Y1, Y2));
+
+    const T = Thickness | 0;
+
+    Graphic.DrawRect(MinX, MinY, MaxX, MinY + T, R, G, B, A);
+    Graphic.DrawRect(MinX, MaxY - T, MaxX, MaxY, R, G, B, A);
+    Graphic.DrawRect(MinX, MinY + T, MinX + T, MaxY - T, R, G, B, A);
+    Graphic.DrawRect(MaxX - T, MinY + T, MaxX, MaxY - T, R, G, B, A);
+}
+
 Graphic.DrawPixels = function(X, Y, W, Data){
     if(!Data){ return; }
 

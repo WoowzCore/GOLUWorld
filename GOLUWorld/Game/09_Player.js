@@ -145,5 +145,32 @@ class GamePlayer extends GameEntity{
         }
         
         super.Update(DT);
+        
+        Player.Update(DT);
     }
 }
+
+Player.KeyPress = function(Key, Down){
+    if(Key === "e" && Down){
+        if(Player.Interface.Current === INTERFACE_PANEL_NONE){
+            Player.Interface.Current = INTERFACE_PANEL_CREATIVE;
+        }else{
+            Player.Interface.Current = INTERFACE_PANEL_NONE
+        }
+    }
+}
+
+Player.Update = function(DT){
+    Player.Interface.InInterface = Player.Interface.Current !== INTERFACE_PANEL_NONE;
+}
+
+// ----------------------------------------------------------------------
+
+Player.Interface = {}
+
+const INTERFACE_PANEL_NONE = 0;
+const INTERFACE_PANEL_CREATIVE = 1;
+
+Player.Interface.Current = INTERFACE_PANEL_NONE;
+
+Player.Interface.InInterface = false;

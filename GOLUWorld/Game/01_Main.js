@@ -66,6 +66,27 @@ GMath.Random.Int = function(Min, Max){
     return (Min + (GMath.Random.Raw() % (Max - Min + 1))) | 0;
 }
 
+GMath.Random.RawSeeded = function(Seed){
+    let S = (Seed || 0) >>> 0;
+    S ^= S << 13;
+    S ^= S >>> 17;
+    S ^= S << 5;
+    return S >>> 0;
+}
+
+GMath.Random.FloatSeeded = function(Seed){
+    return GMath.Random.RawSeeded(Seed) / 4294967296;
+}
+
+GMath.Random.IntSeeded = function(Seed, Min, Max){
+    if(Max === undefined){ Max = Min; Min = 0; }
+    return (Min + (GMath.Random.RawSeeded(Seed) % (Max - Min + 1))) | 0;
+}
+
+GMath.Random.SeedFromTwoNumber = function(X, Y, Seed){
+    return (X * 374761393 + Y * 668265263 + Seed * 2147483647) | 0;
+}
+
 // ----------------------------------------------------------------------
 
 const Input = {}
